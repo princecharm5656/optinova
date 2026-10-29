@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Section from "@/components/wrapper/section";
 import Container from "@/components/shared/container";
 
@@ -110,6 +111,15 @@ export default function Footer() {
             </span>
           </p>
         </div>
+
+        <div className="flex flex-wrap gap-4 justify-center text-xs text-text-muted">
+          <Link href="/privacy" className="hover:text-cyan-accent">Privacy Policy</Link>
+          <span>·</span>
+          <Link href="/terms" className="hover:text-cyan-accent">Terms of Service</Link>
+          <span>·</span>
+          <Link href="/contact" className="hover:text-cyan-accent">Contact</Link>
+        </div>
+
 
       </Container>
     </footer>

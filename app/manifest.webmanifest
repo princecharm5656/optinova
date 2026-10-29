@@ -1,0 +1,16 @@
+{
+  "name": "OptiNova — AI Tools for Creators",
+  "short_name": "OptiNova",
+  "description": "10+ Free AI tools for content creators",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08080F",
+  "theme_color": "#06B6D4",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

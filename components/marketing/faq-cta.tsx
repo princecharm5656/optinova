@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import Section from "@/components/wrapper/section";
 import { useState } from "react";
 import { Plus, Minus, Sparkles } from "lucide-react";

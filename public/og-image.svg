@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#08080F"/>
+      <stop offset="50%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <g opacity="0.15">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#06B6D4" stroke-width="1"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#06B6D4" stroke-width="1"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#06B6D4" stroke-width="1"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#06B6D4" stroke-width="1"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#06B6D4" stroke-width="1"/>
+  </g>
+  
+  <text x="600" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="#06B6D4">OptiNova</text>
+  
+  <text x="600" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" fill="#FAFAFA" font-weight="600">The Operating System for Creators</text>
+  
+  <text x="600" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#A1A1AA">10+ AI Tools · Free Forever</text>
+  
+  <text x="600" y="570" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#06B6D4">Founded by Ram Dhingana</text>
+</svg>
