@@ -105,14 +105,19 @@ function buildFinance(raw: any, currency: string): Finance {
 function validate(raw: any): Blueprint {
   const currency = str(raw?.meta?.currency, 5).toUpperCase() || DEFAULT_CURRENCY;
 
-  const sections = (Array.isArray(raw.sections) ? raw.sections : [])
-    .map((s: any) => ({
-      title: str(s?.title, 40),
-      points: (Array.isArray(s?.points) ? s.points : [])
-        .map((p: any) => ({ label: str(p?.label, 60), text: str(p?.text, 300) }))
-        .filter((p: any) => p.label && p.text),
-    }))
-    .filter((s: any) => s.title && s.points.length >= 2);
+  // Keep exactly the 4 known sections, once each, in a fixed order (AI sometimes repeats or invents titles).
+  const SECTION_ORDER = ["Vision", "Strategy", "Marketing", "Operations"];
+  const found = new Map<string, { title: string; points: { label: string; text: string }[] }>();
+  for (const s of Array.isArray(raw.sections) ? raw.sections : []) {
+    const title = SECTION_ORDER.find((t) => t.toLowerCase() === str(s?.title, 40).toLowerCase());
+    if (!title || found.has(title)) continue; // unknown or duplicate -> ignore
+    const points = (Array.isArray(s?.points) ? s.points : [])
+      .map((p: any) => ({ label: str(p?.label, 60), text: str(p?.text, 300) }))
+      .filter((p: any) => p.label && p.text)
+      .slice(0, 4);
+    if (points.length >= 2) found.set(title, { title, points });
+  }
+  const sections = SECTION_ORDER.filter((t) => found.has(t)).map((t) => found.get(t)!);
 
   const nextMoves = (Array.isArray(raw.nextMoves) ? raw.nextMoves : [])
     .map((m: any, i: number) => ({ day: num(m?.day, i + 1), title: str(m?.title, 80), detail: str(m?.detail, 200) }))
