@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import {
-  LayoutDashboard, TrendingUp, DollarSign, Download, CheckCircle2, Circle, ListChecks, Info,
+  LayoutDashboard, TrendingUp, DollarSign, Download, CheckCircle2, Circle, ListChecks, Info, Loader2,
 } from "lucide-react";
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -10,23 +10,13 @@ import {
 import AiImage, { IMAGE_GAP_MS } from "@/components/magic/ai-image";
 import { createClient } from "@/lib/supabase/client";
 import type { Blueprint } from "@/lib/magic/types";
+import { fmt, axisFmt, fmtRange } from "@/lib/magic/format";
 
 const IMAGE_LABELS: Record<string, string> = {
   brand: "Brand Identity",
   space: "Space Concept",
   product: "Product Concept",
 };
-
-// 4,500,000 -> "PKR 4.5M"
-const fmt = (n: number, cur: string) => {
-  const abs = Math.abs(n);
-  const s =
-    abs >= 1e9 ? (abs / 1e9).toFixed(1) + "B" :
-    abs >= 1e6 ? (abs / 1e6).toFixed(1) + "M" :
-    abs >= 1e3 ? Math.round(abs / 1e3) + "K" : String(Math.round(abs));
-  return `${n < 0 ? "-" : ""}${cur} ${s.replace(/\.0(?=[MBK]|$)/, "")}`;
-};
-const axisFmt = (n: number) => fmt(n, "").trim();
 
 /**
  * Keeps the Next Moves checklist in state and saves it to the blueprint row (if it has an id).
@@ -73,6 +63,25 @@ export default function BlueprintView({ result, prompt, runKey, done, onToggleDo
   const f = result.finance;
   const cur = f.currency;
   const doneCount = Object.values(done).filter(Boolean).length;
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // The PDF library is loaded only when needed, so it doesn't slow down the page.
+  const exportPdf = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const { buildBlueprintPdf, downloadPdf, pdfFilename } = await import("@/lib/magic/pdf");
+      const bytes = await buildBlueprintPdf(result, prompt, done);
+      downloadPdf(bytes, pdfFilename(result.meta.businessName));
+    } catch (e) {
+      console.error("[pdf] export failed:", e);
+      setExportError("Could not create the PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
         <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -89,12 +98,17 @@ export default function BlueprintView({ result, prompt, runKey, done, onToggleDo
                 {result.usage && <span className="ml-3 text-purple-300">{result.usage.remaining} of {result.usage.limit} blueprints left today</span>}
               </p>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="shrink-0 flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all shadow-xl print:hidden"
-            >
-              <Download size={20} /> Export PDF
-            </button>
+            <div className="shrink-0 flex flex-col items-end gap-2 print:hidden">
+              <button
+                onClick={exportPdf}
+                disabled={exporting}
+                className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all shadow-xl disabled:opacity-60"
+              >
+                {exporting ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                {exporting ? "Preparing PDF…" : "Export PDF"}
+              </button>
+              {exportError && <p className="text-sm text-red-300">{exportError}</p>}
+            </div>
           </div>
 
           {/* Chart + Financial Pulse */}
@@ -145,7 +159,7 @@ export default function BlueprintView({ result, prompt, runKey, done, onToggleDo
               </h3>
               <div className="space-y-4">
                 {[
-                  ["Setup Cost", `${fmt(f.setupLow, cur)} – ${fmt(f.setupHigh, cur).replace(cur + " ", "")}`],
+                  ["Setup Cost", fmtRange(f.setupLow, f.setupHigh, cur)],
                   ["Monthly Revenue (Month 12)", fmt(f.month12Revenue, cur)],
                   ["Break-even", f.breakEvenMonth
                       ? f.breakEvenMonth <= 24 ? `Month ${f.breakEvenMonth}` : `~Month ${f.breakEvenMonth} (after this chart)`
