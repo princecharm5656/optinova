@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Loader2, Trash2, LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import AccountChip from "@/components/magic/account-chip";
 
 type Item = { id: string; title: string | null; prompt: string; created_at: string };
 
@@ -57,6 +58,7 @@ export default function BlueprintHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-gray-200 p-6 font-sans text-base leading-relaxed">
+      <AccountChip />
       <div className="max-w-4xl mx-auto pt-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">

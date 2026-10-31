@@ -4,6 +4,7 @@ import { Sparkles, Send, Loader2, Wand2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import BlueprintView, { useDoneState } from "@/components/magic/blueprint-view";
 import type { Blueprint } from "@/lib/magic/types";
+import AccountChip from "@/components/magic/account-chip";
 
 const thinkingSteps = [
   "Initializing Master AI Orchestrator...",
@@ -73,6 +74,7 @@ export default function MagicPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-gray-200 p-6 font-sans text-base leading-relaxed selection:bg-purple-500/30">
+      <AccountChip />
       {/* Header Section */}
       <div className="max-w-6xl mx-auto text-center mt-20 mb-16">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-sm mb-6">

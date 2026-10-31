@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import BlueprintView, { useDoneState } from "@/components/magic/blueprint-view";
 import { createClient } from "@/lib/supabase/client";
 import type { Blueprint } from "@/lib/magic/types";
+import AccountChip from "@/components/magic/account-chip";
 
 type Row = { id: string; prompt: string; data: Blueprint; done: Record<string, boolean> | null };
 
@@ -49,6 +50,7 @@ export default function SavedBlueprintPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-gray-200 p-6 font-sans text-base leading-relaxed">
+      <AccountChip />
       <div className="max-w-7xl mx-auto pt-10 pb-6 px-4 flex items-center justify-between">
         <Link href="/magic/history" className="text-purple-300 hover:text-white underline text-sm">
           ← My blueprints

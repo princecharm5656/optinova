@@ -6,6 +6,7 @@ import { Users, Activity, DollarSign, TrendingUp, Mail, Globe, Sparkles } from "
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import AccountChip from "@/components/magic/account-chip";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <Section background="base" className="py-12 min-h-screen text-text-base">
+        <AccountChip />
         <Container>
           <div className="text-center py-20">
             <p className="text-cyan-accent">Loading admin dashboard...</p>
@@ -72,6 +74,7 @@ export default function AdminDashboardPage() {
   if (error || !data) {
     return (
       <Section background="base" className="py-12 min-h-screen text-text-base">
+        <AccountChip />
         <Container>
           <div className="text-center py-20 space-y-4">
             <p className="text-red-400">{error || "Could not load the dashboard."}</p>
@@ -84,6 +87,7 @@ export default function AdminDashboardPage() {
 
   return (
     <Section background="base" className="py-12 min-h-screen text-text-base">
+        <AccountChip />
       <Container>
         <div className="max-w-7xl mx-auto space-y-8">
 

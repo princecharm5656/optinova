@@ -5,6 +5,7 @@ import { Mail, Check, Clock, X } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import AccountChip from "@/components/magic/account-chip";
 
 interface PendingUser {
   id: string;
@@ -44,7 +45,11 @@ export default function AdminUpgradePage() {
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(`Failed: ${json.error || res.status}`);
+      alert(
+        res.status === 403
+          ? "Failed: the account you are logged in with right now is not the admin. Check the account shown at the top right of this page."
+          : `Failed: ${json.error || res.status}`
+      );
       return false;
     }
     return true;
@@ -67,6 +72,7 @@ export default function AdminUpgradePage() {
 
   return (
     <Section background="base" className="py-12 min-h-screen text-text-base">
+        <AccountChip />
       <Container>
         <div className="max-w-5xl mx-auto space-y-6">
           <div>
@@ -119,7 +125,7 @@ export default function AdminUpgradePage() {
                         <Button
                           onClick={() => upgradeUser(user.id, "pro")}
                           size="sm"
-                          className="bg-cyan-accent text-black"
+                          className="bg-cyan-400 hover:bg-cyan-300 text-black font-semibold"
                         >
                           → Pro
                         </Button>

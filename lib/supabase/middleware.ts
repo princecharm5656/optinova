@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Set ADMIN_EMAIL in .env.local / Vercel (server-only, no NEXT_PUBLIC_ prefix).
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ram@optinova.com").toLowerCase();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ram@optinova.com").trim().replace(/^["']+|["']+$/g, "").toLowerCase();
 
 // If Supabase is slow or unreachable, don't hold every request for ~25s.
 const AUTH_TIMEOUT_MS = 4000;

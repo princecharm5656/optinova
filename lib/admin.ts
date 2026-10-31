@@ -2,7 +2,29 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 // Same rule as proxy.ts: logged in + verified email + the admin email.
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ram@optinova.com").toLowerCase();
+// trim() + quote-stripping: a stray space or "quotes" pasted into Vercel would otherwise break the match.
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ram@optinova.com").trim().replace(/^["']+|["']+$/g, "").toLowerCase();
+
+const isAdminUser = (user: { email?: string | null; email_confirmed_at?: string | null }) =>
+  !!user.email_confirmed_at && user.email?.toLowerCase() === ADMIN_EMAIL;
+
+export type Me = { loggedIn: false } | { loggedIn: true; email: string; isAdmin: boolean };
+
+/** Who is logged in right now (server-side), and are they the admin? Does NOT reveal the admin email. */
+export async function getCurrentUser(): Promise<Me> {
+  try {
+    const supabase = await createServerClient();
+    const res = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+    ]);
+    const user = res?.data.user;
+    if (!user) return { loggedIn: false };
+    return { loggedIn: true, email: user.email || "", isAdmin: isAdminUser(user) };
+  } catch {
+    return { loggedIn: false };
+  }
+}
 
 export type AdminCheck = { ok: true } | { ok: false; status: 401 | 403 | 503; error: string };
 
@@ -22,7 +44,7 @@ export async function requireAdmin(): Promise<AdminCheck> {
       }
       return { ok: false, status: 401, error: "Please log in." };
     }
-    if (!user.email_confirmed_at || user.email?.toLowerCase() !== ADMIN_EMAIL) {
+    if (!isAdminUser(user)) {
       return { ok: false, status: 403, error: "Admin access only." };
     }
     return { ok: true };
