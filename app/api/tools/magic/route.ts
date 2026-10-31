@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { groqJSON } from "@/lib/groq";
 import { requireLoginAndClaim } from "@/lib/usage";
+import { saveBlueprint } from "@/lib/blueprints";
 import type { Blueprint, Finance, SetupItem, FixedCost } from "@/lib/magic/types";
 
 // Default currency when the prompt gives no location hint. Change if your audience changes.
@@ -163,7 +164,8 @@ export async function POST(req: Request) {
       validate,
     });
 
-    return NextResponse.json({ ...blueprint, usage: { remaining: claim.remaining, limit: claim.limit } });
+    const id = await saveBlueprint(prompt, blueprint); // null if saving failed (blueprint still returned)
+    return NextResponse.json({ ...blueprint, id, usage: { remaining: claim.remaining, limit: claim.limit } });
   } catch (error: any) {
     console.error("[magic] failed:", error?.message || error);
     return NextResponse.json(

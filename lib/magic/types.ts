@@ -22,5 +22,6 @@ export type Blueprint = {
   nextMoves: { day: number; title: string; detail: string }[];
   imagePrompts: { brand: string; space: string; product: string };
   finance: Finance;
+  id?: string | null; // saved row id (added by the API)
   usage?: { remaining: number; limit: number }; // added by the API after validation
 };
