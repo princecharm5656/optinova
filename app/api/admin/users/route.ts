@@ -10,10 +10,13 @@ export async function GET() {
 
   try {
     const db = adminDb();
-    const [users, subs] = await Promise.all([
-      listAllUsers(db),
-      fetchAll(db, "user_subscriptions", "user_id, status"),
-    ]);
+    const users = await listAllUsers(db);
+    let subs: any[] = [];
+    try {
+      subs = await fetchAll(db, "user_subscriptions", "user_id, status");
+    } catch (e: any) {
+      console.error("[admin/users]", e?.message || e); // table missing: list users as free
+    }
     const list = users
       .map((u) => ({
         id: u.id as string,

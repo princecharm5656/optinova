@@ -21,10 +21,16 @@ export async function GET() {
     const db = adminDb();
     const warnings: string[] = [];
 
-    const [users, subsAll] = await Promise.all([
-      listAllUsers(db),
-      fetchAll(db, "user_subscriptions", "user_id, plan, status"),
-    ]);
+    const users = await listAllUsers(db);
+
+    // If the subscriptions table is missing, show everyone as free instead of failing.
+    let subsAll: any[] = [];
+    try {
+      subsAll = await fetchAll(db, "user_subscriptions", "user_id, plan, status");
+    } catch (e: any) {
+      console.error("[admin/stats]", e?.message || e);
+      warnings.push("Could not read user_subscriptions (run supabase/subscriptions.sql).");
+    }
     const subs = subsAll.filter((s) => s.status === "active");
 
     // One table failing (e.g. missing) must not blank the whole dashboard.
