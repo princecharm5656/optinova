@@ -5,7 +5,6 @@ import { Mail, Check, Clock, X } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 
 interface PendingUser {
   id: string;
@@ -23,55 +22,47 @@ export default function AdminUpgradePage() {
   }, []);
 
   const loadUsers = async () => {
-    const supabase = createClient();
+    try {
+      const res = await fetch("/api/admin/users", { cache: "no-store" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
+      setUsers(json.users as PendingUser[]);
+    } catch (e: any) {
+      console.error("Load users error:", e);
+      alert(e?.message || "Could not load users.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Get all users with their subscription status
-    const { data: profiles } = await supabase
-      .from("user_subscriptions")
-      .select("user_id, status, created_at");
-
-    const { data: authUsers } = await supabase.auth.admin.listUsers();
-
-    const enriched = (authUsers?.users || []).map((u) => {
-      const sub = profiles?.find((p) => p.user_id === u.id);
-      return {
-        id: u.id,
-        email: u.email || "",
-        created_at: u.created_at,
-        status: sub?.status || "free",
-      };
+  // Changes go through a server route that re-checks you are the admin.
+  const changeSubscription = async (userId: string, action: "upgrade" | "cancel", plan?: string) => {
+    const res = await fetch("/api/admin/subscription", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, action, plan }),
     });
-
-    setUsers(enriched);
-    setLoading(false);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(`Failed: ${json.error || res.status}`);
+      return false;
+    }
+    return true;
   };
 
   const upgradeUser = async (userId: string, plan: string) => {
-    const supabase = createClient();
-
-    await supabase.from("user_subscriptions").upsert({
-      user_id: userId,
-      plan,
-      status: "active",
-      updated_at: new Date().toISOString(),
-    });
-
-    alert(`✅ User upgraded to ${plan}!`);
-    loadUsers();
+    if (await changeSubscription(userId, "upgrade", plan)) {
+      alert(`User upgraded to ${plan}!`);
+      loadUsers();
+    }
   };
 
   const cancelSubscription = async (userId: string) => {
     if (!confirm("Cancel this user's subscription?")) return;
-
-    const supabase = createClient();
-
-    await supabase
-      .from("user_subscriptions")
-      .update({ status: "canceled", updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-
-    alert("❌ Subscription canceled");
-    loadUsers();
+    if (await changeSubscription(userId, "cancel")) {
+      alert("Subscription canceled");
+      loadUsers();
+    }
   };
 
   return (

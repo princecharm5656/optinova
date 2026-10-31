@@ -6,7 +6,6 @@ import { Users, Activity, DollarSign, TrendingUp, Mail, Globe, Sparkles } from "
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +34,7 @@ interface UserDetail {
 export default function AdminDashboardPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAnalytics();
@@ -42,93 +42,40 @@ export default function AdminDashboardPage() {
 
   const loadAnalytics = async () => {
     setLoading(true);
-    const supabase = createClient();
-
+    setError(null);
     try {
-      const { data: authData } = await supabase.auth.admin.listUsers();
-      const users = authData?.users || [];
-
-      const { data: subs } = await supabase
-        .from("user_subscriptions")
-        .select("*")
-        .eq("status", "active");
-
-      const [captions, hashtags, bios, emails, stories] = await Promise.all([
-        supabase.from("captions_history").select("*"),
-        supabase.from("hashtags_history").select("*"),
-        supabase.from("bios_history").select("*"),
-        supabase.from("emails_history").select("*"),
-        supabase.from("stories_history").select("*"),
-      ]);
-
-      const allUsage = [
-        ...(captions.data || []),
-        ...(hashtags.data || []),
-        ...(bios.data || []),
-        ...(emails.data || []),
-        ...(stories.data || []),
-      ];
-
-      const toolUsage: Record<string, number> = {
-        caption: 0,
-        hashtag: 0,
-        bio: 0,
-        email: 0,
-        story: 0,
-      };
-
-      allUsage.forEach((item: any) => {
-        if (item.tool_type && toolUsage[item.tool_type] !== undefined) {
-          toolUsage[item.tool_type]++;
-        }
-      });
-
-      const recentUsers: UserDetail[] = users.map((u: any) => {
-        const sub = subs?.find((s: any) => s.user_id === u.id);
-        const userUsage = allUsage.filter((item: any) => item.user_id === u.id);
-
-        return {
-          id: u.id,
-          email: u.email || "N/A",
-          created_at: u.created_at,
-          last_sign_in: u.last_sign_in_at || null,
-          email_confirmed: u.email_confirmed_at ? true : false,
-          status: sub ? "pro" : "free",
-          plan: sub?.plan || "free",
-          tool_usage_count: userUsage.length,
-          country: u.user_metadata?.country || "Unknown",
-        };
-      });
-
-      const proCount = subs?.length || 0;
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const activeUsers = users.filter(
-        (u: any) => u.last_sign_in_at && new Date(u.last_sign_in_at) > sevenDaysAgo
-      ).length;
-
-      setData({
-        totalUsers: users.length,
-        activeUsers,
-        proUsers: proCount,
-        totalUsage: allUsage.length,
-        recentUsers,
-        toolUsage,
-        revenue: { total: proCount * 9, count: proCount },
-      });
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Analytics error:", error);
+      // Data comes from a server route that verifies you are the admin and uses the service key.
+      const res = await fetch("/api/admin/stats", { cache: "no-store" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
+      setData(json as AnalyticsData);
+    } catch (e: any) {
+      console.error("Analytics error:", e);
+      setError(e?.message || "Could not load analytics.");
+    } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <Section background="base" className="py-12 min-h-screen text-text-base">
         <Container>
           <div className="text-center py-20">
             <p className="text-cyan-accent">Loading admin dashboard...</p>
+          </div>
+        </Container>
+      </Section>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Section background="base" className="py-12 min-h-screen text-text-base">
+        <Container>
+          <div className="text-center py-20 space-y-4">
+            <p className="text-red-400">{error || "Could not load the dashboard."}</p>
+            <button onClick={loadAnalytics} className="underline text-cyan-accent">Try again</button>
           </div>
         </Container>
       </Section>

@@ -84,7 +84,16 @@ export default function BlueprintView({ result, prompt, runKey, done, onToggleDo
   };
 
   return (
-        <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+        <div className="bp-root max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+          {/* If someone uses Ctrl+P instead of Export PDF: print dark text on white, not faded light text. */}
+          <style>{`
+            @media print {
+              html, body { background: #fff !important; }
+              .bp-root, .bp-root * { color: #111827 !important; background: transparent !important; border-color: #d1d5db !important; box-shadow: none !important; }
+              .bp-root text, .bp-root .recharts-text { fill: #374151 !important; }
+              .bp-root { max-width: 100% !important; }
+            }
+          `}</style>
           {/* Title row */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 px-4">
             <div>
