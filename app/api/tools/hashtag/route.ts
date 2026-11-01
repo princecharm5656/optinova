@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+import { toolChat } from "@/lib/groq";
+import { guardTool } from "@/lib/usage";
 
 export async function POST(request: NextRequest) {
+  const blocked = await guardTool(); // login + daily limit
+  if (blocked) return blocked;
+
   try {
     const body = await request.json();
     const { platform, topic, niche, count = 20 } = body;
@@ -26,8 +26,7 @@ Requirements:
 Return ONLY as JSON array of strings:
 ["tag1", "tag2", "tag3", ...]`;
 
-    const completion = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+    const completion = await toolChat({
       messages: [
         {
           role: "system",
@@ -63,7 +62,7 @@ Return ONLY as JSON array of strings:
   } catch (error: any) {
     console.error("Hashtag error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

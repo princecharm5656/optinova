@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+import { toolChat } from "@/lib/groq";
+import { guardTool } from "@/lib/usage";
 
 export async function POST(request: NextRequest) {
+  const blocked = await guardTool(); // login + daily limit
+  if (blocked) return blocked;
+
   try {
     const body = await request.json();
     const { platform, about, tone = "Professional", name } = body;
@@ -29,8 +29,7 @@ Requirements:
 Return ONLY as JSON array:
 ["bio 1", "bio 2", ...]`;
 
-    const completion = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+    const completion = await toolChat({
       messages: [
         { role: "system", content: "You are a personal branding expert. Return valid JSON arrays only." },
         { role: "user", content: prompt },
@@ -56,6 +55,6 @@ Return ONLY as JSON array:
     return NextResponse.json({ bios });
   } catch (error: any) {
     console.error("Bio error:", error);
-    return NextResponse.json({ error: error.message || "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

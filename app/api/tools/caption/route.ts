@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk";
-
-// ✅ FIXED: Initialize the groq client properly
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+import { toolChat } from "@/lib/groq";
+import { guardTool } from "@/lib/usage";
 
 export async function POST(request: NextRequest) {
+  const blocked = await guardTool(); // login + daily limit
+  if (blocked) return blocked;
+
   try {
     const body = await request.json();
     const { platform, topic, tone, language } = body;
@@ -32,9 +31,8 @@ Requirements:
 Return ONLY as valid JSON array:
 ["caption 1", "caption 2", "caption 3", "caption 4", "caption 5"]`;
 
-    const completion = await groq.chat.completions.create({
-      // ✅ Using a stable model name
-      model: "openai/gpt-oss-120b", 
+    const completion = await toolChat({
+      // ✅ Using a stable model name 
 
       messages: [
         {
@@ -76,7 +74,7 @@ Return ONLY as valid JSON array:
   } catch (error: any) {
     console.error("Caption generation error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate captions" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

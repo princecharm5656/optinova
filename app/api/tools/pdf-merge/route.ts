@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
+import { guardTool } from "@/lib/usage";
 
 export async function POST(request: NextRequest) {
+  const blocked = await guardTool(); // login + daily limit
+  if (blocked) return blocked;
+
   console.log("PDF merge route called");
   try {
     const contentType = request.headers.get("content-type") || "";
@@ -68,7 +72,7 @@ export async function POST(request: NextRequest) {
     const mergedBytes = await mergedPdf.save();
     console.log("Merge complete, size:", mergedBytes.length);
 
-    return new NextResponse(mergedBytes, {
+    return new NextResponse(new Uint8Array(mergedBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export type UsageKind = "magic" | "image";
+export type UsageKind = "magic" | "image" | "tool";
 
 export type Claim =
   | { ok: true; remaining: number; limit: number }
@@ -46,7 +47,9 @@ export async function requireLoginAndClaim(kind: UsageKind): Promise<Claim> {
       return {
         ok: false,
         status: 429,
-        error: `Daily limit reached (${row?.max_allowed ?? "?"} per 24 hours). Please try again later.`,
+        error: row?.paid
+          ? `Daily limit reached (${row?.max_allowed ?? "?"} per 24 hours). Please try again later.`
+          : `Daily limit reached (${row?.max_allowed ?? "?"} per 24 hours). Upgrade to Pro for much higher limits, or try again later.`,
       };
     }
     return { ok: true, remaining: row.remaining, limit: row.max_allowed };
@@ -54,4 +57,10 @@ export async function requireLoginAndClaim(kind: UsageKind): Promise<Claim> {
     console.error("[usage] unexpected:", e?.message || e);
     return { ok: false, status: 503, error: "Something went wrong checking your account. Please try again." };
   }
+}
+
+/** One-liner for API routes: returns an error response to send, or null if the caller may proceed. */
+export async function guardTool(kind: UsageKind = "tool"): Promise<NextResponse | null> {
+  const claim = await requireLoginAndClaim(kind);
+  return claim.ok ? null : NextResponse.json({ error: claim.error }, { status: claim.status });
 }

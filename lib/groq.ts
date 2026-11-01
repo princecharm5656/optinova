@@ -64,3 +64,31 @@ export async function groqJSON<T>({
 
   throw new Error(`All AI models failed. ${errors.join(" | ")}`);
 }
+
+type ToolMessage = { role: "system" | "user"; content: string };
+
+/**
+ * For the simple text tools (bio, blog, caption...). Same call shape as before, but:
+ *  - uses the maintained model list, with fallback to the next model on failure;
+ *  - gives reasoning models (gpt-oss) extra token room: their "thinking" tokens count against
+ *    max_tokens and would otherwise cut the visible answer short.
+ */
+export async function toolChat(p: { messages: ToolMessage[]; temperature: number; max_tokens: number }) {
+  let lastError: unknown;
+  for (const model of DEFAULT_MODELS) {
+    try {
+      const reasoning = model.startsWith("openai/gpt-oss");
+      return await getClient().chat.completions.create({
+        model,
+        messages: p.messages,
+        temperature: p.temperature,
+        max_tokens: reasoning ? p.max_tokens + 2000 : p.max_tokens,
+        ...(reasoning ? { reasoning_effort: "low" as const } : {}),
+      });
+    } catch (e: any) {
+      console.error(`[groq] tool call failed on ${model}:`, e?.message || e);
+      lastError = e;
+    }
+  }
+  throw lastError ?? new Error("All AI models failed.");
+}

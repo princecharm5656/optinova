@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardTool } from "@/lib/usage";
 
 export async function POST(request: NextRequest) {
+  const blocked = await guardTool(); // login + daily limit
+  if (blocked) return blocked;
+
   try {
     const formData = await request.formData();
     const audioFile = formData.get("audio") as File;
