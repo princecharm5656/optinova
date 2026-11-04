@@ -6,6 +6,7 @@ interface SectionProps {
   className?: string;
   containerClassName?: string;
   background?: "base" | "elevated" | "transparent";
+  id?: string;
 }
 
 export default function Section({
@@ -13,6 +14,7 @@ export default function Section({
   className = "",
   containerClassName = "",
   background = "base",
+  id,
 }: SectionProps) {
   const bgClass = {
     base: "bg-base",
@@ -21,7 +23,7 @@ export default function Section({
   }[background];
 
   return (
-    <section className={`${bgClass} ${className}`}>
+    <section id={id} className={`${bgClass} ${id ? "scroll-mt-20" : ""} ${className}`}>
       <Container className={containerClassName}>
         {children}
       </Container>

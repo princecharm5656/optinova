@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
                   a.click();
                 }}
                 size="sm"
-                className="bg-cyan-accent text-black"
+                className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300"
               >
                 Export CSV
               </Button>

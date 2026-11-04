@@ -26,24 +26,24 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3 text-sm text-text-muted">
               <li>
-                <a href="#features" className="hover:text-cyan-accent transition-colors">
+                <Link href="/#features" className="hover:text-cyan-accent transition-colors">
                   Features
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#tools" className="hover:text-cyan-accent transition-colors">
+                <Link href="/tools" className="hover:text-cyan-accent transition-colors">
                   Tools
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#pricing" className="hover:text-cyan-accent transition-colors">
+                <Link href="/pricing" className="hover:text-cyan-accent transition-colors">
                   Pricing
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#changelog" className="hover:text-cyan-accent transition-colors">
-                  Changelog
-                </a>
+                <Link href="/magic" className="hover:text-cyan-accent transition-colors">
+                  Magic Blueprint
+                </Link>
               </li>
             </ul>
           </div>
@@ -55,19 +55,19 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3 text-sm text-text-muted">
               <li>
-                <a href="#about" className="hover:text-cyan-accent transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-cyan-accent transition-colors">
+                <Link href="/contact" className="hover:text-cyan-accent transition-colors">
                   Contact
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#blog" className="hover:text-cyan-accent transition-colors">
-                  Blog
-                </a>
+                <Link href="/login" className="hover:text-cyan-accent transition-colors">
+                  Log in
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className="hover:text-cyan-accent transition-colors">
+                  Sign up
+                </Link>
               </li>
             </ul>
           </div>
@@ -79,19 +79,14 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3 text-sm text-text-muted">
               <li>
-                <a href="#privacy" className="hover:text-cyan-accent transition-colors">
+                <Link href="/privacy" className="hover:text-cyan-accent transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#terms" className="hover:text-cyan-accent transition-colors">
+                <Link href="/terms" className="hover:text-cyan-accent transition-colors">
                   Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#cookies" className="hover:text-cyan-accent transition-colors">
-                  Cookie Policy
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

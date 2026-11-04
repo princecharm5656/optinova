@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Section from "@/components/wrapper/section";
 import { 
   PenTool, Image as ImageIcon, FileText, 
@@ -58,9 +59,33 @@ const categories = [
   },
 ];
 
+// Only tools that really exist are clickable. Key = "<category title>|<tool label>".
+const LIVE_TOOLS: Record<string, string> = {
+  "AI Writing|Caption Generator": "/tools/caption",
+  "AI Writing|Blog Writer": "/tools/blog",
+  "AI Writing|Email Writer": "/tools/email",
+  "AI Writing|Bio Generator": "/tools/bio",
+  "AI Writing|Story Teller": "/tools/story",
+  "SEO Tools|Keyword Research": "/tools/keyword",
+  "Image Studio|Compress": "/tools/image-compress",
+  "PDF Workshop|Merge": "/tools/pdf-merge",
+  "Creator Suite|Instagram Caption": "/tools/caption",
+  "Creator Suite|Hashtag Gen": "/tools/hashtag",
+};
+
+// Anchor on the /tools page for each category (Website Tools has nothing built yet).
+const CATEGORY_ANCHOR: Record<string, string | undefined> = {
+  "AI Writing": "writing",
+  "SEO Tools": "seo",
+  "Image Studio": "image",
+  "PDF Workshop": "pdf",
+  "Creator Suite": "creator",
+};
+
 export default function ToolCategories() {
   return (
     <Section 
+      id="tools"
       background="base"
       className="py-24 md:py-32 text-text-base"
     >
@@ -97,7 +122,10 @@ export default function ToolCategories() {
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <span className="text-xs text-text-muted px-3 py-1 rounded-full border border-base-color">
-                    {category.tools_count}
+                    {(() => {
+                      const live = category.tools.filter((t) => LIVE_TOOLS[`${category.title}|${t}`]).length;
+                      return live > 0 ? `${live} live` : "Coming soon";
+                    })()}
                   </span>
                 </div>
 
@@ -111,21 +139,37 @@ export default function ToolCategories() {
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-base-color">
-                  {category.tools.map((tool, idx) => (
-                    <div 
-                      key={idx}
-                      className="flex items-center gap-2 text-sm text-text-muted hover:text-cyan-accent transition-colors cursor-pointer group/tool"
-                    >
-                      <ArrowRight className="w-3 h-3 opacity-0 group-hover/tool:opacity-100 -ml-5 group-hover/tool:ml-0 transition-all" />
-                      <span>{tool}</span>
-                    </div>
-                  ))}
+                  {category.tools.map((tool, idx) => {
+                    const href = LIVE_TOOLS[`${category.title}|${tool}`];
+                    return href ? (
+                      <Link
+                        key={idx}
+                        href={href}
+                        className="flex items-center gap-2 text-sm text-text-muted hover:text-cyan-accent transition-colors group/tool"
+                      >
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover/tool:opacity-100 -ml-5 group-hover/tool:ml-0 transition-all" />
+                        <span>{tool}</span>
+                      </Link>
+                    ) : (
+                      <div key={idx} className="flex items-center gap-2 text-sm text-text-muted/50 cursor-default">
+                        <span>{tool}</span>
+                        <span className="text-[10px] uppercase tracking-wide border border-base-color rounded px-1.5 py-0.5">Soon</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <button className="flex items-center gap-2 text-sm text-cyan-accent font-semibold pt-2 hover:gap-3 transition-all">
-                  View all tools
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {CATEGORY_ANCHOR[category.title] ? (
+                  <Link
+                    href={`/tools#${CATEGORY_ANCHOR[category.title]}`}
+                    className="flex items-center gap-2 text-sm text-cyan-accent font-semibold pt-2 hover:gap-3 transition-all"
+                  >
+                    View all tools
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <p className="text-sm text-text-muted pt-2">Tools coming soon</p>
+                )}
               </div>
             </div>
           );

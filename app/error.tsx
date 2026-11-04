@@ -29,7 +29,7 @@ export default function Error({
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={reset} className="bg-cyan-accent text-black">
+          <Button onClick={reset} className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
             Try Again
           </Button>
           <Link href="/">

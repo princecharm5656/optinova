@@ -198,7 +198,7 @@ export default function DashboardPage() {
             <div className="bg-elevated border border-base-color rounded-xl p-8 text-center text-text-muted">
               <p>No recent activity yet. Start by using a tool!</p>
               <Link href="/tools/caption">
-                <Button className="mt-4 bg-cyan-accent text-black">
+                <Button className="mt-4 bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
                   Try AI Caption Generator →
                 </Button>
               </Link>

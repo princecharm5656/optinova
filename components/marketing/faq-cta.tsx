@@ -66,6 +66,7 @@ export default function FAQCTA() {
 
   return (
     <Section 
+      id="faq"
       background="base"
       className="py-24 md:py-32 text-text-base"
     >
@@ -137,19 +138,23 @@ export default function FAQCTA() {
             </ul>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button 
-                size="lg"
-                className="bg-cyan-accent text-black hover:bg-cyan-accent/90 hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-shadow"
-              >
-                Get Started Free
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                className="border-cyan-accent/50 text-cyan-accent hover:bg-cyan-accent/10"
-              >
-                View Pricing
-              </Button>
+              <Link href="/signup">
+                <Button
+                  size="lg"
+                  className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-shadow"
+                >
+                  Get Started Free
+                </Button>
+              </Link>
+              <Link href="/pricing">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-cyan-accent/50 text-cyan-accent hover:bg-cyan-accent/10"
+                >
+                  View Pricing
+                </Button>
+              </Link>
             </div>
 
             <p className="text-sm text-text-muted text-center pt-4">

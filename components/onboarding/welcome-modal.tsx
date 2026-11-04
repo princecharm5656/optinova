@@ -52,7 +52,7 @@ export default function WelcomeModal() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Link href="/tools/caption">
-              <Button onClick={handleClose} className="bg-cyan-accent text-black">
+              <Button onClick={handleClose} className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
                 Start First Tool
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -70,7 +70,7 @@ export default function WelcomeModal() {
 function Step({ number, text }: { number: number; text: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="w-6 h-6 rounded-full bg-cyan-accent text-black text-sm font-bold flex items-center justify-center flex-shrink-0">
+      <div className="w-6 h-6 rounded-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300 text-sm font-bold flex items-center justify-center flex-shrink-0">
         {number}
       </div>
       <p className="text-text-base">{text}</p>

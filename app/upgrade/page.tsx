@@ -139,7 +139,7 @@ export default function UpgradePage() {
             </div>
 
             <a href="mailto:ram@optinova.com?subject=OptiNova Pro Upgrade">
-              <Button className="w-full bg-cyan-accent text-black" size="lg">
+              <Button className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
                 <Mail className="w-4 h-4 mr-2" />
                 Email Payment Proof
               </Button>

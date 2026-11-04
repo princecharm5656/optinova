@@ -29,7 +29,7 @@ export default function Hero() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Link href="/signup">
-            <Button size="lg" className="bg-cyan-accent text-black hover:bg-cyan-accent/90">
+            <Button size="lg" className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
               Start Building Free →
             </Button>
           </Link>

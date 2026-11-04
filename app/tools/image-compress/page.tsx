@@ -223,7 +223,7 @@ const handleSave = async () => {
 
                   <img src={compressed.url} alt="Compressed" className="max-h-64 mx-auto rounded-lg" />
 
-                  <Button onClick={downloadCompressed} className="w-full bg-cyan-accent text-black" size="lg">
+                  <Button onClick={downloadCompressed} className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
                     <Download className="w-4 h-4 mr-2" />
                     Download Compressed
                   </Button>

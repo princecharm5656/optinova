@@ -140,7 +140,7 @@ export default function CaptionGeneratorPage() {
 
             {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 
-            <Button onClick={handleGenerate} disabled={loading || !topic.trim()} className="w-full bg-cyan-accent text-black hover:bg-cyan-accent/90" size="lg">
+            <Button onClick={handleGenerate} disabled={loading || !topic.trim()} className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
               {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>) : (<><Sparkles className="w-4 h-4 mr-2" />Generate Captions</>)}
             </Button>
 

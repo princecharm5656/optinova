@@ -282,7 +282,7 @@ export default function HistoryPage() {
               Use any tool and click Save to keep your results
             </p>
             <Link href="/dashboard">
-              <Button className="bg-cyan-accent text-black">
+              <Button className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
                 Explore Tools →
               </Button>
             </Link>

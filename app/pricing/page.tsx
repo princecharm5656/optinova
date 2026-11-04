@@ -109,7 +109,7 @@ export default function PricingPage() {
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-accent text-black text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-black font-semibold hover:bg-cyan-300 text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   MOST POPULAR
                 </div>
@@ -136,7 +136,7 @@ export default function PricingPage() {
                 </Link>
               ) : (
                 <Link href="/upgrade">
-                  <Button size="lg" className="w-full bg-cyan-accent text-black hover:bg-cyan-accent/90">
+                  <Button size="lg" className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
                     {tier.cta}
                   </Button>
                 </Link>

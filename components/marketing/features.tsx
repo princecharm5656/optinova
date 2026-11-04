@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import Link from "next/link";
 import Section from "@/components/wrapper/section";
 import Container from "@/components/shared/container";
 import { 
@@ -57,9 +59,28 @@ const features = [
   },
 ];
 
+// Where each card leads. A card without a destination is a feature that is not built yet.
+const FEATURE_HREF: Record<string, string | undefined> = {
+  "AI Writing Hub": "/tools#writing",
+  "SEO Toolkit": "/tools#seo",
+  "Image Studio": "/tools#image",
+  "PDF Workshop": "/tools#pdf",
+  "Creator Hub": "/tools#creator",
+  // "Growth Analytics": not built yet -> not clickable, shows "Coming soon"
+};
+
+function CardShell({ href, className, children }: { href?: string; className: string; children: ReactNode }) {
+  return href ? (
+    <Link href={href} className={`block ${className}`}>{children}</Link>
+  ) : (
+    <div className={className.replace("cursor-pointer", "cursor-default")}>{children}</div>
+  );
+}
+
 export default function Features() {
   return (
     <Section 
+      id="features"
       background="base"
       className="py-24 md:py-32 text-text-base"
     >
@@ -85,8 +106,9 @@ export default function Features() {
         {features.map((feature, index) => {
           const Icon = feature.icon;
           return (
-            <div
+            <CardShell
               key={index}
+              href={FEATURE_HREF[feature.title]}
               className="group relative p-8 rounded-2xl border border-base-color bg-elevated/50 backdrop-blur-sm transition-all duration-300 hover:border-cyan-accent/50 hover:-translate-y-1 cursor-pointer overflow-hidden"
             >
               {/* Hover Glow */}
@@ -121,11 +143,17 @@ export default function Features() {
 
                 {/* Bottom Line */}
                 <div className="pt-2 flex items-center gap-2 text-sm text-cyan-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span>Explore tools</span>
-                  <span>→</span>
+                  {FEATURE_HREF[feature.title] ? (
+                    <>
+                      <span>Explore tools</span>
+                      <span>→</span>
+                    </>
+                  ) : (
+                    <span>Coming soon</span>
+                  )}
                 </div>
               </div>
-            </div>
+            </CardShell>
           );
         })}
       </div>

@@ -260,7 +260,7 @@ export default function PDFMergePage() {
  Final size: {formatSize(mergedSize)}
               </p>
               <Button onClick={downloadMerged}
-                className="bg-cyan-accent text-black hover:bg-cyan-accent/90"
+                className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300"
                 size="lg"
               >
                 <Download className="w-4 h-4 mr-2" />
