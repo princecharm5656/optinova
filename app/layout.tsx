@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Toaster from "@/components/ui/toaster";
+import AccountChip from "@/components/magic/account-chip";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -80,6 +82,8 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="antialiased bg-base text-text-base">
         {children}
+        <Toaster />
+        <AccountChip global />
       </body>
     </html>
   );

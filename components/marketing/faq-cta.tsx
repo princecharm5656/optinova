@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const faqs = [
   {
     question: "Is OptiNova really free?",
-    answer: "Yes! The free tier includes 5 AI credits daily, basic image and PDF tools, and access to all SEO utilities. No credit card required. Premium tiers unlock unlimited AI access and advanced features.",
+    answer: "Yes! The free tier includes 40 AI generations daily, basic image and PDF tools, and access to all SEO utilities. No credit card required. Premium tiers unlock unlimited AI access and advanced features.",
   },
   {
     question: "Do you support Urdu and Hindi?",
@@ -123,7 +123,7 @@ export default function FAQCTA() {
 
             <ul className="space-y-3">
               {[
-                "5 free AI credits daily",
+                "40 free AI generations daily",
                 "Unlimited basic tool usage",
                 "Multilingual support (English, Urdu, Hindi)",
                 "No credit card needed",

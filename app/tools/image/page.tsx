@@ -7,6 +7,7 @@ import { Image as ImageIcon, Loader2, ArrowLeft, Download, Sparkles } from "luci
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 
 export const dynamic = "force-dynamic"; 
 
@@ -37,7 +38,20 @@ export default function ImageGeneratorPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      setImageUrl(data.imageUrl);
+      // Load the picture here, so a limit / service problem shows as a clear message instead of a broken image.
+      let shown: string = data.imageUrl;
+      try {
+        const imgRes = await fetch(data.imageUrl);
+        if (!imgRes.ok) {
+          const j = await imgRes.json().catch(() => ({}));
+          throw new Error(j.error || "The image service is busy. Please try again in a moment.");
+        }
+        shown = URL.createObjectURL(await imgRes.blob());
+      } catch (e: any) {
+        if (!(e instanceof TypeError)) throw e; // network/CORS only: fall back to showing the URL directly
+      }
+
+      setImageUrl(shown);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -59,7 +73,7 @@ export default function ImageGeneratorPage() {
       a.click();
       document.body.removeChild(a);
     } catch (err) {
-      alert("Download failed. Right-click image to save instead.");
+      toast.error("Download failed. Right-click image to save instead.");
     }
   };
 
@@ -96,7 +110,7 @@ export default function ImageGeneratorPage() {
                 className="w-full px-4 py-3 bg-base border border-base-color rounded-lg focus:border-pink-400 focus:outline-none resize-none"
               />
               <p className="text-xs text-text-muted mt-2">
-                Be specific: colors, mood, style, objects
+                Describe what the picture should show (place, objects, colors, light). Example: luxury coffee shop in Karachi, dark wood, marble counter, warm lighting
               </p>
             </div>
 
@@ -137,7 +151,7 @@ export default function ImageGeneratorPage() {
             </Button>
 
             <p className="text-xs text-text-muted text-center">
-              Uses 3 AI credits (heavier operation)
+              Uses 1 of your daily image generations
             </p>
           </div>
 

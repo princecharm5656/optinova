@@ -6,6 +6,7 @@ import { FileText, Loader2, ArrowLeft, Download, Upload, X, FilePlus } from "luc
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 
 interface PDFFile {
   name: string;
@@ -31,14 +32,14 @@ export default function PDFMergePage() {
     const oversizedFiles = validPdfs.filter((f) => f.size > maxSize);
 
     if (oversizedFiles.length >0) {
-      alert(
+      toast.error(
         `Files too large for Vercel (4MB limit):\n${oversizedFiles.map((f) => `${f.name}: ${(f.size /1024 / 1024).toFixed(2)}MB`).join('\n')}\n\nPlease use smaller PDFs.`
   );
       return;
     }
 
     if (validPdfs.length !== selected.length) {
-      alert("Only PDF files are accepted");
+      toast.error("Only PDF files are accepted");
     }
 
     const newFiles: PDFFile[] = validPdfs.map((f) => ({
@@ -260,7 +261,7 @@ export default function PDFMergePage() {
  Final size: {formatSize(mergedSize)}
               </p>
               <Button onClick={downloadMerged}
-                className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300"
+                className="bg-cyan-accent text-black hover:bg-cyan-accent/90"
                 size="lg"
               >
                 <Download className="w-4 h-4 mr-2" />

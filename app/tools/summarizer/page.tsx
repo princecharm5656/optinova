@@ -7,6 +7,7 @@ import { FileSearch, Copy, Loader2, ArrowLeft, Check } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 
 export const dynamic = "force-dynamic"; 
 
@@ -63,10 +64,10 @@ export default function SummarizerPage() {
       body: JSON.stringify({ text, length, format, summary }),
      });
     const data = await response.json();
-    if (data.success) alert("✅ Saved!");
-    else alert("Error: " + data.error);
+    if (data.success) toast.success("Saved to your history");
+    else toast.error(data.error);
   } catch (err: any) {
-    alert("Error: " + err.message);
+    toast.error(err.message);
   } finally {
     setSaving(false);
   }

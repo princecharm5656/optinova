@@ -8,6 +8,7 @@ import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "@/lib/toast";
 
 interface HistoryItem {
   id: string;
@@ -152,7 +153,7 @@ export default function HistoryPage() {
 
     const table = tableMap[type];
     if (!table) {
-      alert("Cannot delete: unknown type");
+      toast.error("Cannot delete: unknown type");
       return;
     }
     
@@ -178,7 +179,7 @@ export default function HistoryPage() {
       setTimeout(() => setCopied(null), 2000);
     } catch (err) {
       console.error("Copy error:", err);
-      alert("Failed to copy");
+      toast.error("Failed to copy");
     }
   };
 
@@ -282,7 +283,7 @@ export default function HistoryPage() {
               Use any tool and click Save to keep your results
             </p>
             <Link href="/dashboard">
-              <Button className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
+              <Button className="bg-cyan-accent text-black">
                 Explore Tools →
               </Button>
             </Link>

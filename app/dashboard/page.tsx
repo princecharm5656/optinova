@@ -31,7 +31,11 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [userId, setUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [credits] = useState(5);
+  const [me, setMe] = useState<{ name: string | null; isAdmin: boolean } | null>(null);
+  const [usage, setUsage] = useState<{
+    paid: boolean;
+    items: { kind: string; used: number; max: number; remaining: number }[];
+  } | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -42,6 +46,14 @@ export default function DashboardPage() {
         setUser(data.user);
         setUserId(data.user.id);
         setLoading(false);
+        fetch("/api/me", { cache: "no-store" })
+          .then((r) => r.json())
+          .then((j) => j.loggedIn && setMe({ name: j.name ?? null, isAdmin: !!j.isAdmin }))
+          .catch(() => {});
+        fetch("/api/usage", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => j && setUsage(j))
+          .catch(() => {});
       }
     });
   }, [router]);
@@ -59,6 +71,11 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const toolUsage = usage?.items.find((i) => i.kind === "tool");
+  const displayName = me?.name || user?.email?.split("@")[0] || "";
+  const firstName = me?.name ? me.name.split(" ")[0] : "";
+  const planLabel = me?.isAdmin ? "Admin" : usage?.paid ? "Pro Plan" : "Free Plan";
 
   const tools = [
     { icon: BookOpen, name: "Templates Library", category: "Resources", available: true, href: "/tools/templates" },
@@ -89,40 +106,51 @@ export default function DashboardPage() {
           OptiNova
         </Link>
 
-        <nav className="flex-1 space-y-1">
-          {["Dashboard", "AI Tools", "SEO Tools", "Image Tools", "PDF Tools"].map((item) => (
-            <a
-              key={item}
-              href="#"
-              className="block px-4 py-2 rounded-lg text-text-muted hover:bg-base hover:text-text-base transition-colors"
+        <nav className="flex-1 space-y-1 overflow-y-auto">
+          {[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Magic Blueprint", href: "/magic" },
+            { label: "AI Tools", href: "/tools#writing" },
+            { label: "SEO Tools", href: "/tools#seo" },
+            { label: "Image Tools", href: "/tools#image" },
+            { label: "PDF Tools", href: "/tools#pdf" },
+            { label: "History", href: "/history" },
+            { label: "My Blueprints", href: "/magic/history" },
+            { label: "My Account", href: "/account" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`block px-4 py-2 rounded-lg transition-colors hover:bg-base hover:text-text-base ${
+                item.href === "/dashboard" ? "bg-base text-text-base" : "text-text-muted"
+              }`}
             >
-              {item}
-            </a>
+              {item.label}
+            </Link>
           ))}
-          <Link
-            href="/history"
-            className="block px-4 py-2 rounded-lg text-text-muted hover:bg-base hover:text-text-base transition-colors"
-          >
-            History
-          </Link>
-          <Link
-            href="/admin/upgrade"
-            className="block px-4 py-2 rounded-lg text-text-muted hover:bg-base hover:text-text-base transition-colors"
-          >
-            Admin
-          </Link>
+          {me?.isAdmin && (
+            <Link
+              href="/admin/upgrade"
+              className="block px-4 py-2 rounded-lg text-purple-300 hover:bg-base hover:text-text-base transition-colors"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="border-t border-base-color pt-4 space-y-2">
-          <div className="flex items-center gap-3 px-2 py-2">
+          <Link
+            href="/account"
+            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-base transition-colors"
+          >
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-accent to-purple-400 flex items-center justify-center text-black font-bold">
-              {user?.email?.[0]?.toUpperCase()}
+              {(displayName[0] || "?").toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.email}</p>
-              <p className="text-xs text-text-muted">Free Plan</p>
+              <p className="text-sm font-medium truncate">{displayName}</p>
+              <p className="text-xs text-text-muted truncate">{planLabel}</p>
             </div>
-          </div>
+          </Link>
           <Button
             onClick={handleLogout}
             variant="ghost"
@@ -140,7 +168,7 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Welcome back!</h1>
+              <h1 className="text-3xl font-bold">Welcome back{firstName ? `, ${firstName}` : ""}!</h1>
               <p className="text-text-muted mt-1">
                 Ready to build something extraordinary?
               </p>
@@ -149,12 +177,15 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <SearchBar />
 
-              <div className="bg-elevated border border-base-color rounded-xl px-6 py-3">
-                <p className="text-xs text-text-muted">Daily Credits</p>
+              <Link
+                href="/account#usage"
+                className="bg-elevated border border-base-color rounded-xl px-6 py-3 hover:border-cyan-accent/50 transition-colors"
+              >
+                <p className="text-xs text-text-muted">AI generations left today</p>
                 <p className="text-2xl font-bold text-cyan-accent">
-                  {credits}/5
+                  {toolUsage ? `${toolUsage.remaining}/${toolUsage.max}` : "-"}
                 </p>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -198,7 +229,7 @@ export default function DashboardPage() {
             <div className="bg-elevated border border-base-color rounded-xl p-8 text-center text-text-muted">
               <p>No recent activity yet. Start by using a tool!</p>
               <Link href="/tools/caption">
-                <Button className="mt-4 bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
+                <Button className="mt-4 bg-cyan-accent text-black">
                   Try AI Caption Generator →
                 </Button>
               </Link>

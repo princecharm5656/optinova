@@ -14,7 +14,7 @@ const tiers = [
     price: "$0",
     description: "Perfect for getting started",
     features: [
-      "5 AI credits daily",
+      "40 AI generations daily",
       "Basic image tools",
       "Basic PDF tools",
       "Standard SEO tools",
@@ -30,7 +30,7 @@ const tiers = [
     period: "/month",
     description: "For serious creators",
     features: [
-      "Unlimited AI generation",
+      "400 AI generations daily",
       "Advanced image tools",
       "Advanced PDF tools",
       "Priority AI processing",
@@ -109,7 +109,7 @@ export default function PricingPage() {
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-black font-semibold hover:bg-cyan-300 text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-accent text-black text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   MOST POPULAR
                 </div>
@@ -136,7 +136,7 @@ export default function PricingPage() {
                 </Link>
               ) : (
                 <Link href="/upgrade">
-                  <Button size="lg" className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
+                  <Button size="lg" className="w-full bg-cyan-accent text-black hover:bg-cyan-accent/90">
                     {tier.cta}
                   </Button>
                 </Link>
@@ -176,10 +176,10 @@ export default function PricingPage() {
               </tr>
             </thead>
             <tbody className="text-text-base">
-              <FeatureRow feature="AI Tools Access" free="5/day" pro="Unlimited" teams="Unlimited" />
-              <FeatureRow feature="AI Generations" free="5/day" pro="Unlimited" teams="Unlimited" />
+              <FeatureRow feature="AI Tools Access" free="40/day" pro="400/day" teams="400/day" />
+              <FeatureRow feature="AI Generations" free="40/day" pro="400/day" teams="400/day" />
               <FeatureRow feature="Save History" free="20 items" pro="Unlimited" teams="Unlimited" />
-              <FeatureRow feature="Image Generation" free="3/day" pro="Unlimited" teams="Unlimited" />
+              <FeatureRow feature="Image Generation" free="60/day" pro="600/day" teams="600/day" />
               <FeatureRow feature="Priority Support" free="❌" pro="✅" teams="✅ Priority" />
               <FeatureRow feature="Team Members" free="1" pro="1" teams="5 seats" />
               <FeatureRow feature="API Access" free="❌" pro="❌" teams="✅" />

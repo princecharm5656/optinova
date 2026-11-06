@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Loader2, Trash2, LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import AccountChip from "@/components/magic/account-chip";
+import { toast } from "@/lib/toast";
 
 type Item = { id: string; title: string | null; prompt: string; created_at: string };
 
@@ -50,7 +51,7 @@ export default function BlueprintHistoryPage() {
     const { error } = await supabase.from("blueprints").delete().eq("id", id);
     if (error) {
       console.error("[blueprints] delete failed:", error.message);
-      window.alert("Could not delete. Please try again.");
+      toast.error("Could not delete. Please try again.");
       return;
     }
     setItems((prev) => prev.filter((i) => i.id !== id));

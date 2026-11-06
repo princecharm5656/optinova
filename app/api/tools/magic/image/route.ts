@@ -27,19 +27,28 @@ export async function GET(req: NextRequest) {
   const claim = await requireLoginAndClaim("image");
   if (!claim.ok) return NextResponse.json({ error: claim.error }, { status: claim.status });
 
-  const text = encodeURIComponent(raw + STYLE_SUFFIX);
+  // Optional: size (clamped) and raw=1 (no automatic "professional photography" suffix; used by the Image tool).
+  const dim = (name: string) => {
+    const n = parseInt(req.nextUrl.searchParams.get(name) || "", 10);
+    return Number.isFinite(n) ? Math.min(1280, Math.max(256, n)) : 768;
+  };
+  const w = dim("w");
+  const h = dim("h");
+  const plain = req.nextUrl.searchParams.get("raw") === "1";
+
+  const text = encodeURIComponent(plain ? raw : raw + STYLE_SUFFIX);
   const key = process.env.POLLINATIONS_API_KEY;
 
   if (!key) {
     return NextResponse.redirect(
-      `https://image.pollinations.ai/prompt/${text}?seed=${seed}&width=768&height=768&nologo=true`,
+      `https://image.pollinations.ai/prompt/${text}?seed=${seed}&width=${w}&height=${h}&nologo=true`,
       307
     );
   }
 
   try {
     const upstream = await fetch(
-      `https://gen.pollinations.ai/image/${text}?key=${encodeURIComponent(key)}&seed=${seed}&width=768&height=768&nologo=true`,
+      `https://gen.pollinations.ai/image/${text}?key=${encodeURIComponent(key)}&seed=${seed}&width=${w}&height=${h}&nologo=true`,
       { signal: AbortSignal.timeout(55_000) }
     );
     const type = upstream.headers.get("content-type") || "";

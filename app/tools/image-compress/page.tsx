@@ -6,6 +6,7 @@ import { Image as ImageIcon, Loader2, ArrowLeft, Download, Upload, X } from "luc
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 
 interface CompressedImage {
   name: string;
@@ -43,10 +44,10 @@ const handleSave = async () => {
     });
 
     const data = await response.json();
-    if (data.success) alert("✅ Saved to history!");
-    else alert("Error: " + data.error);
+    if (data.success) toast.success("Saved to your history");
+    else toast.error(data.error);
   } catch (err: any) {
-    alert("Error: " + err.message);
+    toast.error(err.message);
   }
 };
 
@@ -56,7 +57,7 @@ const handleSave = async () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      toast.error("Please select an image file");
       return;
     }
 
@@ -223,7 +224,7 @@ const handleSave = async () => {
 
                   <img src={compressed.url} alt="Compressed" className="max-h-64 mx-auto rounded-lg" />
 
-                  <Button onClick={downloadCompressed} className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
+                  <Button onClick={downloadCompressed} className="w-full bg-cyan-accent text-black" size="lg">
                     <Download className="w-4 h-4 mr-2" />
                     Download Compressed
                   </Button>

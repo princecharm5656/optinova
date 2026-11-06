@@ -8,7 +8,7 @@ const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "ram@optinova.com").trim().repla
 const isAdminUser = (user: { email?: string | null; email_confirmed_at?: string | null }) =>
   !!user.email_confirmed_at && user.email?.toLowerCase() === ADMIN_EMAIL;
 
-export type Me = { loggedIn: false } | { loggedIn: true; email: string; isAdmin: boolean };
+export type Me = { loggedIn: false } | { loggedIn: true; email: string; name: string | null; isAdmin: boolean };
 
 /** Who is logged in right now (server-side), and are they the admin? Does NOT reveal the admin email. */
 export async function getCurrentUser(): Promise<Me> {
@@ -20,7 +20,9 @@ export async function getCurrentUser(): Promise<Me> {
     ]);
     const user = res?.data.user;
     if (!user) return { loggedIn: false };
-    return { loggedIn: true, email: user.email || "", isAdmin: isAdminUser(user) };
+    const rawName = (user.user_metadata as { full_name?: unknown } | undefined)?.full_name;
+    const name = typeof rawName === "string" && rawName.trim() ? rawName.trim() : null;
+    return { loggedIn: true, email: user.email || "", name, isAdmin: isAdminUser(user) };
   } catch {
     return { loggedIn: false };
   }

@@ -154,7 +154,7 @@ export default function TranscribePage() {
             </Button>
 
             <p className="text-xs text-text-muted text-center">
-              Uses 5 AI credits
+              Uses 1 of your daily AI generations
             </p>
           </div>
 

@@ -7,6 +7,7 @@ import { User, Copy, Loader2, ArrowLeft, Check } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 
 export const dynamic = "force-dynamic";
 
@@ -56,10 +57,10 @@ export default function BioGeneratorPage() {
         body: JSON.stringify({ platform, name, about, tone, bios }),
       });
       const data = await response.json();
-      if (data.success) alert("✅ Saved!");
-      else alert("Error: " + data.error);
+      if (data.success) toast.success("Saved to your history");
+      else toast.error(data.error);
     } catch (err: any) {
-      alert("Error: " + err.message);
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
@@ -124,7 +125,7 @@ export default function BioGeneratorPage() {
 
             {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 
-            <Button onClick={handleGenerate} disabled={loading || !about.trim()} className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
+            <Button onClick={handleGenerate} disabled={loading || !about.trim()} className="w-full bg-cyan-accent text-black hover:bg-cyan-accent/90" size="lg">
               {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>) : (<><User className="w-4 h-4 mr-2" />Generate Bios</>)}
             </Button>
           </div>
