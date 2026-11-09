@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Copy, ArrowRight, BookOpen } from "lucide-react";
+import { Sparkles, Copy, Check, ArrowRight, BookOpen } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
@@ -243,7 +243,7 @@ export default function TemplatesPage() {
               onClick={() => setFilter(cat)}
               className={`px-4 py-2 rounded-lg text-sm transition-colors ${
                 filter === cat
-                  ? "bg-cyan-400 text-black font-semibold hover:bg-cyan-300"
+                  ? "bg-cyan-accent text-black"
                   : "bg-elevated text-text-muted hover:text-text-base border border-base-color"
               }`}
             >
@@ -276,7 +276,7 @@ export default function TemplatesPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => useTemplate(template)}
-                  className="flex-1 px-3 py-2 bg-cyan-400 text-black font-semibold hover:bg-cyan-300 rounded-lg hover:bg-cyan-accent/90 text-sm"
+                  className="flex-1 px-3 py-2 bg-cyan-accent text-black rounded-lg hover:bg-cyan-accent/90 text-sm"
                 >
                   Use Template →
                 </button>

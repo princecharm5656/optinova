@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminDb, listAllUsers, fetchAll } from "@/lib/admin";
+import { describeSubscription, isRunning } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -26,12 +27,15 @@ export async function GET() {
     // If the subscriptions table is missing, show everyone as free instead of failing.
     let subsAll: any[] = [];
     try {
-      subsAll = await fetchAll(db, "user_subscriptions", "user_id, plan, status");
+      subsAll = await fetchAll(db, "user_subscriptions", "user_id, plan, status, started_at, current_period_end, billing_period");
     } catch (e: any) {
       console.error("[admin/stats]", e?.message || e);
       warnings.push("Could not read user_subscriptions (run supabase/subscriptions.sql).");
     }
-    const subs = subsAll.filter((s) => s.status === "active");
+    // Only plans that are running RIGHT NOW count as Pro (an expired plan is just a free user).
+    const subInfo = new Map<string, ReturnType<typeof describeSubscription>>(subsAll.map((s) => [s.user_id, describeSubscription(s)]));
+    const subs = subsAll.filter((s) => isRunning(subInfo.get(s.user_id)!.state));
+    const expiringSoon = subsAll.filter((s) => subInfo.get(s.user_id)!.state === "expiring").length;
 
     // One table failing (e.g. missing) must not blank the whole dashboard.
     const usage: { tool: string; user_id: string }[] = [];
@@ -56,6 +60,7 @@ export async function GET() {
     const recentUsers = users
       .map((u) => {
         const sub = subs.find((s) => s.user_id === u.id);
+        const info = subInfo.get(u.id);
         return {
           id: u.id as string,
           email: (u.email as string) || "N/A",
@@ -64,6 +69,9 @@ export async function GET() {
           email_confirmed: !!u.email_confirmed_at,
           status: sub ? "pro" : "free",
           plan: sub?.plan || "free",
+          plan_ends: sub ? info?.endsAt ?? null : null,
+          plan_days_left: sub ? info?.daysLeft ?? null : null,
+          plan_expired: info?.state === "expired",
           tool_usage_count: usageByUser.get(u.id) || 0,
           country: u.user_metadata?.country || "Unknown",
         };
@@ -80,6 +88,7 @@ export async function GET() {
       totalUsage: usage.length,
       recentUsers,
       toolUsage,
+      expiringSoon,
       revenue: { total: subs.length * 9, count: subs.length },
       warnings,
     });

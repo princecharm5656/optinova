@@ -21,6 +21,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import PlanBanner from "@/components/magic/plan-banner";
 import { Button } from "@/components/ui/button";
 import WelcomeModal from "@/components/onboarding/welcome-modal";
 import SearchBar from "@/components/dashboard/search-bar";
@@ -164,6 +165,7 @@ export default function DashboardPage() {
       </aside>
 
       <main className="ml-64 p-8">
+          <PlanBanner />
         <WelcomeModal />
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center justify-between flex-wrap gap-4">

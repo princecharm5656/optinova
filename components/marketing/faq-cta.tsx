@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     question: "Can I cancel anytime?",
-    answer: "Yes, cancel your subscription anytime with one click. No questions, no retention tricks. Your data is yours — export anytime.",
+    answer: "Nothing renews automatically. You pay for one period at a time (for example 30 days) and when it ends you simply go back to the Free plan. Your saved work stays in your account and you can download it anytime from My Account.",
   },
   {
     question: "Do you offer team plans?",

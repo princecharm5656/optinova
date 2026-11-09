@@ -1,61 +1,88 @@
 "use client";
-
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Users, Activity, DollarSign, TrendingUp, Mail, Globe, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
 import AccountChip from "@/components/magic/account-chip";
+import { toast } from "@/lib/toast";
+import { formatDate, nextPeriod, type BillingPeriod, type SubInfo } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 
-interface AnalyticsData {
-  totalUsers: number;
-  activeUsers: number;
-  proUsers: number;
-  totalUsage: number;
-  recentUsers: UserDetail[];
-  toolUsage: Record<string, number>;
-  revenue: { total: number; count: number };
-}
+type AdminUser = SubInfo & { id: string; email: string; created_at: string; canceled: boolean };
 
-interface UserDetail {
-  id: string;
-  email: string;
-  created_at: string;
-  last_sign_in: string | null;
-  email_confirmed: boolean;
-  status: string;
-  plan: string;
-  tool_usage_count: number;
-  country: string;
-}
+const ORDER: Record<string, number> = { expiring: 0, expired: 1, active: 2, free: 3 };
 
-export default function AdminDashboardPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+export default function AdminUpgradePage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
-    loadAnalytics();
+    loadUsers();
   }, []);
 
-  const loadAnalytics = async () => {
-    setLoading(true);
-    setError(null);
+  const loadUsers = async () => {
     try {
-      // Data comes from a server route that verifies you are the admin and uses the service key.
-      const res = await fetch("/api/admin/stats", { cache: "no-store" });
+      const res = await fetch("/api/admin/users", { cache: "no-store" });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `Request failed (${res.status})`);
-      setData(json as AnalyticsData);
+      setUsers(json.users as AdminUser[]);
     } catch (e: any) {
-      console.error("Analytics error:", e);
-      setError(e?.message || "Could not load analytics.");
+      console.error("Load users error:", e);
+      toast.error(e?.message || "Could not load users.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Plans that need attention (ending soon / ended) come first, then running plans, then free users.
+  const sorted = useMemo(
+    () => [...users].sort((a, b) => ORDER[a.state] - ORDER[b.state] || +new Date(b.created_at) - +new Date(a.created_at)),
+    [users]
+  );
+  const count = (s: string) => users.filter((u) => u.state === s).length;
+
+  const send = async (payload: Record<string, unknown>) => {
+    const res = await fetch("/api/admin/subscription", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error(
+        res.status === 403
+          ? "The account you are logged in with right now is not the admin. Check the account shown at the top right."
+          : json.error || `Failed (${res.status})`
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const grant = async (u: AdminUser, period: BillingPeriod) => {
+    const running = u.state === "active" || u.state === "expiring";
+    const row = u.state === "free" ? null : { plan: u.plan, status: "active", started_at: u.startedAt, current_period_end: u.endsAt, billing_period: u.billingPeriod };
+    const { endsAt } = nextPeriod(row, period);
+    const label = period === "yearly" ? "1 year" : "1 month";
+    if (!confirm(`${running ? "Extend" : "Give"} Pro by ${label} for ${u.email}?\n\nNew end date: ${formatDate(endsAt)}`)) return;
+    setBusy(u.id);
+    if (await send({ userId: u.id, action: "grant", plan: "pro", period })) {
+      toast.success(`${u.email}: Pro until ${formatDate(endsAt)}`);
+      await loadUsers();
+    }
+    setBusy(null);
+  };
+
+  const cancel = async (u: AdminUser) => {
+    if (!confirm(`End ${u.email}'s Pro plan right now? They go back to Free immediately.`)) return;
+    setBusy(u.id);
+    if (await send({ userId: u.id, action: "cancel" })) {
+      toast.success("Plan ended");
+      await loadUsers();
+    }
+    setBusy(null);
   };
 
   if (loading) {
@@ -63,23 +90,7 @@ export default function AdminDashboardPage() {
       <Section background="base" className="py-12 min-h-screen text-text-base">
         <AccountChip />
         <Container>
-          <div className="text-center py-20">
-            <p className="text-cyan-accent">Loading admin dashboard...</p>
-          </div>
-        </Container>
-      </Section>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <Section background="base" className="py-12 min-h-screen text-text-base">
-        <AccountChip />
-        <Container>
-          <div className="text-center py-20 space-y-4">
-            <p className="text-red-400">{error || "Could not load the dashboard."}</p>
-            <button onClick={loadAnalytics} className="underline text-cyan-accent">Try again</button>
-          </div>
+          <p className="text-center text-cyan-accent py-20">Loading...</p>
         </Container>
       </Section>
     );
@@ -87,201 +98,80 @@ export default function AdminDashboardPage() {
 
   return (
     <Section background="base" className="py-12 min-h-screen text-text-base">
-        <AccountChip />
+      <AccountChip />
       <Container>
-        <div className="max-w-7xl mx-auto space-y-8">
-
-          {/* Header */}
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-              <p className="text-text-muted mt-1">Complete analytics & user management</p>
-            </div>
-            <Button onClick={loadAnalytics} variant="outline" size="sm">
-              Refresh Data
-            </Button>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">Admin: Manage Subscriptions</h1>
+            <p className="text-text-muted">Give or extend Pro after you have verified the bank transfer.</p>
           </div>
 
-          {/* Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              icon={Users}
-              label="Total Users"
-              value={data.totalUsers}
-              color="cyan"
-            />
-            <MetricCard
-              icon={Activity}
-              label="Active (7d)"
-              value={data.activeUsers}
-              color="purple"
-            />
-            <MetricCard
-              icon={DollarSign}
-              label="MRR"
-              value={`$${data.revenue.total}`}
-              color="green"
-            />
-            <MetricCard
-              icon={Sparkles}
-              label="AI Usage"
-              value={data.totalUsage}
-              color="orange"
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            {[
+              ["Running", count("active") + count("expiring"), "text-emerald-300"],
+              ["Ending in 3 days", count("expiring"), "text-amber-300"],
+              ["Expired", count("expired"), "text-red-300"],
+              ["Free users", count("free"), "text-text-muted"],
+            ].map(([label, n, tone]) => (
+              <div key={label as string} className="rounded-xl border border-base-color bg-elevated p-3">
+                <p className={`text-2xl font-bold ${tone}`}>{n}</p>
+                <p className="text-xs text-text-muted">{label}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Tool Usage */}
-          <div className="bg-elevated border border-base-color rounded-2xl p-6">
-            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-orange-400" />
-              Tool Usage
-            </h2>
-            <div className="space-y-3">
-              {Object.entries(data.toolUsage).map(([tool, count]) => {
-                const total = Object.values(data.toolUsage).reduce((s, v) => s + v, 0);
-                const percent = total > 0 ? (count / total) * 100 : 0;
-
-                return (
-                  <div key={tool}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-text-base capitalize text-sm">{tool}</span>
-                      <span className="text-cyan-accent text-sm">
-                        {count} ({percent.toFixed(0)}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-2 bg-base rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-accent to-purple-400"
-                        style={{ width: `${percent}%` }}
-                      />
+          <div className="space-y-3">
+            {sorted.map((u) => {
+              const running = u.state === "active" || u.state === "expiring";
+              const disabled = busy === u.id;
+              const badge =
+                u.state === "expiring" ? { text: `Pro · ends in ${u.daysLeft} day${u.daysLeft === 1 ? "" : "s"}`, cls: "bg-amber-500/15 text-amber-300" }
+                : u.state === "active" ? { text: `Pro · ${u.daysLeft} days left`, cls: "bg-emerald-500/15 text-emerald-300" }
+                : u.state === "expired" ? { text: "Pro · expired", cls: "bg-red-500/15 text-red-300" }
+                : { text: u.canceled ? "Free (canceled)" : "Free", cls: "bg-white/5 text-text-muted" };
+              return (
+                <div key={u.id} className="bg-elevated border border-base-color rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{u.email}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <span className={`rounded-full px-2.5 py-0.5 font-semibold ${badge.cls}`}>{badge.text}</span>
+                      <span className="text-text-muted">Joined {formatDate(u.created_at)}</span>
+                      {u.state !== "free" && (
+                        <span className="text-text-muted">
+                          Started {formatDate(u.startedAt)} · {running ? "Ends" : "Ended"} {formatDate(u.endsAt)}
+                          {u.billingPeriod ? ` · ${u.billingPeriod}` : ""}
+                        </span>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Button size="sm" disabled={disabled} onClick={() => grant(u, "monthly")} className="bg-cyan-400 hover:bg-cyan-300 text-black font-semibold">
+                      {running ? "+1 month" : u.state === "expired" ? "Renew 1 month" : "Give Pro 1 month"}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={disabled} onClick={() => grant(u, "yearly")}>
+                      {running ? "+1 year" : u.state === "expired" ? "Renew 1 year" : "Give Pro 1 year"}
+                    </Button>
+                    {running && (
+                      <Button size="sm" variant="outline" disabled={disabled} onClick={() => cancel(u)} className="border-red-500/40 text-red-400 hover:bg-red-500/10">
+                        End plan
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {users.length === 0 && <p className="text-center text-text-muted py-10">No users yet.</p>}
           </div>
 
-          {/* User Details Table */}
-          <div className="bg-elevated border border-base-color rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Users className="w-5 h-5 text-cyan-accent" />
-                All Users ({data.recentUsers.length})
-              </h2>
-              <Button
-                onClick={() => {
-                  const csv = [
-                    ["Email", "Status", "Joined", "Last Sign In", "Usage"],
-                    ...data.recentUsers.map((u) => [
-                      u.email,
-                      u.status,
-                      u.created_at,
-                      u.last_sign_in || "Never",
-                      u.tool_usage_count,
-                    ]),
-                  ];
-                  const csvContent = csv.map((row) => row.join(",")).join("\n");
-                  const blob = new Blob([csvContent], { type: "text/csv" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `optinova-users-${Date.now()}.csv`;
-                  a.click();
-                }}
-                size="sm"
-                className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300"
-              >
-                Export CSV
-              </Button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-base-color">
-                    <th className="text-left py-3 px-2 text-text-muted">Email</th>
-                    <th className="text-left py-3 px-2 text-text-muted">Status</th>
-                    <th className="text-left py-3 px-2 text-text-muted">Joined</th>
-                    <th className="text-left py-3 px-2 text-text-muted">Last Sign In</th>
-                    <th className="text-left py-3 px-2 text-text-muted">Usage</th>
-                    <th className="text-left py-3 px-2 text-text-muted">Country</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-base-color/50">
-                      <td className="py-3 px-2 text-text-base">{user.email}</td>
-                      <td className="py-3 px-2">
-                        {user.status === "pro" ? (
-                          <span className="text-xs px-2 py-1 rounded-full bg-cyan-accent/20 text-cyan-accent">
-                            Pro
-                          </span>
-                        ) : (
-                          <span className="text-xs px-2 py-1 rounded-full bg-base text-text-muted">
-                            Free
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-2 text-text-muted text-xs">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-2 text-text-muted text-xs">
-                        {user.last_sign_in
-                          ? new Date(user.last_sign_in).toLocaleDateString()
-                          : "Never"}
-                      </td>
-                      <td className="py-3 px-2 text-cyan-accent font-semibold">
-                        {user.tool_usage_count}
-                      </td>
-                      <td className="py-3 px-2 text-text-muted text-xs">
-                        {user.country}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {data.recentUsers.length === 0 && (
-                <p className="text-center text-text-muted py-8">No users yet</p>
-              )}
-            </div>
+          <div className="bg-elevated border border-base-color rounded-xl p-5 text-sm text-text-muted space-y-1">
+            <p className="font-semibold text-text-base">How it works</p>
+            <p>1. The user pays and sends you the proof. 2. You verify it in your bank app. 3. Press &quot;Give Pro 1 month&quot; (or +1 month).</p>
+            <p>A plan ends by itself on its end date, and the user goes back to Free. Nothing renews automatically.</p>
+            <p>If a user pays before the end date, the new month is added after the current end, so they lose no days.</p>
+            <p>1 month = 30 days, 1 year = 365 days.</p>
           </div>
-
-          <p className="text-xs text-text-muted text-center">
-            Founded by Ram Dhingana · OptiNova Admin Panel
-          </p>
-
         </div>
       </Container>
     </Section>
-  );
-}
-
-function MetricCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: any;
-  label: string;
-  value: string | number;
-  color: string;
-}) {
-  const colorClass: Record<string, string> = {
-    cyan: "text-cyan-accent bg-cyan-accent/10",
-    purple: "text-purple-400 bg-purple-400/10",
-    green: "text-green-400 bg-green-400/10",
-    orange: "text-orange-400 bg-orange-400/10",
-  };
-
-  return (
-    <div className="bg-elevated border border-base-color rounded-2xl p-6">
-      <div className={`inline-flex p-3 rounded-xl ${colorClass[color] || colorClass.cyan} mb-4`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <p className="text-text-muted text-sm">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value}</p>
-    </div>
   );
 }

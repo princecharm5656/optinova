@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, adminDb, listAllUsers, fetchAll } from "@/lib/admin";
+import { describeSubscription } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,17 +14,22 @@ export async function GET() {
     const users = await listAllUsers(db);
     let subs: any[] = [];
     try {
-      subs = await fetchAll(db, "user_subscriptions", "user_id, status");
+      subs = await fetchAll(db, "user_subscriptions", "user_id, plan, status, started_at, current_period_end, billing_period");
     } catch (e: any) {
-      console.error("[admin/users]", e?.message || e); // table missing: list users as free
+      console.error("[admin/users]", e?.message || e); // table/columns missing: list users as free
     }
     const list = users
-      .map((u) => ({
-        id: u.id as string,
-        email: (u.email as string) || "",
-        created_at: u.created_at as string,
-        status: (subs.find((s) => s.user_id === u.id)?.status as string) || "free",
-      }))
+      .map((u) => {
+        const row = subs.find((s) => s.user_id === u.id);
+        const info = describeSubscription(row);
+        return {
+          id: u.id as string,
+          email: (u.email as string) || "",
+          created_at: u.created_at as string,
+          canceled: row?.status === "canceled",
+          ...info,
+        };
+      })
       .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     return NextResponse.json({ users: list });
   } catch (e: any) {

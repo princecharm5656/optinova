@@ -5,19 +5,19 @@ import { Mail, Copy, Check, Building2, MessageCircle, Zap } from "lucide-react";
 import Container from "@/components/shared/container";
 import Section from "@/components/wrapper/section";
 import { Button } from "@/components/ui/button";
+import PlanBanner from "@/components/magic/plan-banner";
+import { useSubscription } from "@/lib/use-subscription";
+import { formatDate } from "@/lib/subscription";
+import { PAYMENT, bankConfigured } from "@/lib/payment";
 
 export const dynamic = "force-dynamic";
 
 export default function UpgradePage() {
   const [copied, setCopied] = useState<string | null>(null);
 
-  const bankDetails = {
-    bankName: "Meezan Bank",
-    accountTitle: "Ram Dhingana",
-    accountNumber: "1234567890",
-    iban: "PK00MEZN0000001234567890",
-    swiftCode: "MEZNPKKA",
-  };
+  const bankDetails = PAYMENT;
+  const sub = useSubscription();
+  const running = sub?.state === "active" || sub?.state === "expiring";
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -44,6 +44,14 @@ export default function UpgradePage() {
             </p>
           </div>
 
+          <PlanBanner />
+          {running && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+              You are on <strong>Pro until {formatDate(sub?.endsAt)}</strong> ({sub?.daysLeft} day{sub?.daysLeft === 1 ? "" : "s"} left).
+              If you pay now, the new month is added after that date, so you lose no days.
+            </div>
+          )}
+
           {/* Pro Plan */}
           <div className="bg-elevated border border-base-color rounded-2xl p-8 space-y-6">
             <div className="flex justify-between items-start">
@@ -53,22 +61,26 @@ export default function UpgradePage() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">$9</p>
-                <p className="text-xs text-text-muted">/month</p>
+                <p className="text-xs text-text-muted">/month · 30 days</p>
               </div>
             </div>
 
             <ul className="space-y-2 text-text-base">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-400" />
-                Unlimited AI generation
+                400 AI generations per day
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-400" />
-                All 12 AI tools
+                600 images and 100 business blueprints per day
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-400" />
-                Save unlimited history
+                All tools included
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                Save your history
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-400" />
@@ -82,6 +94,7 @@ export default function UpgradePage() {
           </div>
 
           {/* Payment Method Tabs */}
+          {bankConfigured ? (
           <div className="bg-elevated border border-base-color rounded-2xl p-8 space-y-6">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <Building2 className="w-5 h-5" />
@@ -103,27 +116,27 @@ export default function UpgradePage() {
                 copied={copied}
                 onCopy={copyToClipboard}
               />
-              <DetailRow
+              {bankDetails.accountNumber && <DetailRow
                 label="Account Number"
                 value={bankDetails.accountNumber}
                 field="account"
                 copied={copied}
                 onCopy={copyToClipboard}
-              />
-              <DetailRow
+              />}
+              {bankDetails.iban && <DetailRow
                 label="IBAN"
                 value={bankDetails.iban}
                 field="iban"
                 copied={copied}
                 onCopy={copyToClipboard}
-              />
-              <DetailRow
+              />}
+              {bankDetails.swift && <DetailRow
                 label="SWIFT Code (for international)"
-                value={bankDetails.swiftCode}
+                value={bankDetails.swift}
                 field="swift"
                 copied={copied}
                 onCopy={copyToClipboard}
-              />
+              />}
             </div>
 
             <div className="bg-base border border-cyan-accent/30 rounded-lg p-4 space-y-2">
@@ -133,44 +146,66 @@ export default function UpgradePage() {
               <ol className="text-sm text-text-muted space-y-1 list-decimal list-inside">
                 <li>Transfer PKR 2500 (≈$9 USD) to the account above</li>
                 <li>Take screenshot of transaction</li>
-                <li>Email screenshot + your email to: <a href="mailto:ram@optinova.com" className="text-cyan-accent">ram@optinova.com</a></li>
-                <li>You'll get Pro access within 24 hours</li>
+                <li>
+                  Send the screenshot and your account email to:{" "}
+                  {PAYMENT.supportEmail ? (
+                    <a href={`mailto:${PAYMENT.supportEmail}`} className="text-cyan-accent">{PAYMENT.supportEmail}</a>
+                  ) : (
+                    <Link href="/contact" className="text-cyan-accent">our contact form</Link>
+                  )}
+                </li>
+                <li>Your Pro plan is activated within 24 hours and lasts 30 days from activation</li>
               </ol>
             </div>
 
-            <a href="mailto:ram@optinova.com?subject=OptiNova Pro Upgrade">
-              <Button className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
-                <Mail className="w-4 h-4 mr-2" />
-                Email Payment Proof
-              </Button>
-            </a>
+            {PAYMENT.supportEmail && (
+              <a href={`mailto:${PAYMENT.supportEmail}?subject=OptiNova Pro Upgrade`}>
+                <Button className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300" size="lg">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Payment Proof
+                </Button>
+              </a>
+            )}
 
             <p className="text-xs text-text-muted text-center">
-              For international users: Use SWIFT transfer or PayPal (Friends & Family)
+              International users: please contact us for payment options.
             </p>
           </div>
+          ) : (
+            <div className="bg-elevated border border-amber-500/30 rounded-2xl p-8 text-center space-y-3">
+              <h3 className="text-xl font-bold">Payment details are being set up</h3>
+              <p className="text-sm text-text-muted">
+                To upgrade to Pro right now, please contact us and we will send you the payment details.
+              </p>
+              <Link href="/contact">
+                <Button className="bg-cyan-400 text-black font-semibold hover:bg-cyan-300">Contact us to upgrade</Button>
+              </Link>
+            </div>
+          )}
 
           {/* WhatsApp Option */}
+          {PAYMENT.whatsapp && (
           <div className="bg-elevated border border-base-color rounded-2xl p-6 text-center space-y-3">
             <MessageCircle className="w-8 h-8 mx-auto text-green-400" />
             <h3 className="font-bold">Questions?</h3>
             <p className="text-sm text-text-muted">
-              WhatsApp me directly for instant support
+              Message us on WhatsApp
             </p>
             <a
-              href="https://wa.me/923001234567"
+              href={`https://wa.me/${PAYMENT.whatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
             >
               <Button variant="outline" size="sm" className="border-green-500/50 text-green-400">
-                WhatsApp: +92 300 1234567
+                Chat on WhatsApp
               </Button>
             </a>
           </div>
+          )}
 
           {/* Trust */}
           <div className="text-center text-xs text-text-muted">
-            <p>🔒 Secure transfer · Manual verification · Instant upgrade</p>
+            <p>Manual verification · Activated within 24 hours · Nothing renews automatically</p>
             <p className="mt-1">Founded by Ram Dhingana · OptiNova</p>
           </div>
 

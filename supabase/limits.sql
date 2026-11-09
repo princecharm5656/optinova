@@ -1,11 +1,53 @@
--- OptiNova: daily limits, defined in ONE place (run this whole block in Supabase > SQL Editor).
--- Free users get the lower number; users with an ACTIVE 'pro' or 'teams' row in
--- user_subscriptions get the higher one. To change a limit, edit usage_limit() below and run again.
--- Replaces the earlier usage.sql / limits.sql functions.
+-- OptiNova: plan dates + daily limits (run this WHOLE file in Supabase > SQL Editor).
+-- Safe to run again. It replaces the earlier limits.sql / usage.sql functions.
+--
+-- 1) Adds start / end dates to user_subscriptions, so a plan EXPIRES by itself.
+-- 2) Existing active plans get an end date 30 days after they were last changed.
+-- 3) A user counts as paid only while status = 'active' AND the end date is in the future.
+--    The moment the date passes, limits drop to the Free numbers. No cron job is needed.
+-- To change a limit, edit usage_limit() below and run the file again.
 
+-- ---------- 1) plan dates ----------
+alter table public.user_subscriptions
+  add column if not exists started_at          timestamptz,
+  add column if not exists current_period_end  timestamptz,
+  add column if not exists billing_period      text;
+
+alter table public.user_subscriptions drop constraint if exists user_subscriptions_billing_period_check;
+alter table public.user_subscriptions
+  add constraint user_subscriptions_billing_period_check
+  check (billing_period is null or billing_period in ('monthly', 'yearly'));
+
+update public.user_subscriptions set started_at = coalesce(started_at, created_at);
+
+update public.user_subscriptions
+set billing_period     = coalesce(billing_period, 'monthly'),
+    current_period_end = coalesce(current_period_end, coalesce(updated_at, now()) + interval '30 days')
+where status = 'active' and current_period_end is null;
+
+-- ---------- 2) functions ----------
 drop function if exists public.claim_usage(text);
 drop function if exists public.usage_summary();
 drop function if exists public.usage_limit(text, boolean);
+drop function if exists public.is_paid();
+
+-- Is the logged-in user on a running paid plan right now?
+create function public.is_paid()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.user_subscriptions s
+    where s.user_id = auth.uid()
+      and s.status = 'active'
+      and s.plan in ('pro', 'teams')
+      and s.current_period_end is not null
+      and s.current_period_end > now()
+  );
+$$;
 
 create function public.usage_limit(p_kind text, p_paid boolean)
 returns int
@@ -29,7 +71,7 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
-  v_paid boolean := false;
+  v_paid boolean;
   lim int;
   cnt int;
 begin
@@ -38,11 +80,7 @@ begin
     return;
   end if;
 
-  select exists (
-    select 1 from public.user_subscriptions s
-    where s.user_id = uid and s.status = 'active' and s.plan in ('pro', 'teams')
-  ) into v_paid;
-
+  v_paid := public.is_paid();
   lim := public.usage_limit(p_kind, v_paid);
   if lim = 0 then
     return query select false, 0, 0, 0, v_paid;
@@ -65,7 +103,7 @@ begin
 end;
 $$;
 
--- Read-only: how much of each limit the logged-in user has used (for the dashboard / account page).
+-- Read-only: how much of each limit the logged-in user has used.
 create function public.usage_summary()
 returns table (kind text, used int, max_allowed int, paid boolean)
 language plpgsql
@@ -75,16 +113,13 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
-  v_paid boolean := false;
+  v_paid boolean;
 begin
   if uid is null then
     return;
   end if;
 
-  select exists (
-    select 1 from public.user_subscriptions s
-    where s.user_id = uid and s.status = 'active' and s.plan in ('pro', 'teams')
-  ) into v_paid;
+  v_paid := public.is_paid();
 
   return query
     select k.kind,
@@ -96,9 +131,11 @@ begin
 end;
 $$;
 
-revoke all on function public.usage_limit(text, boolean) from public, anon;
-revoke all on function public.claim_usage(text)          from public, anon;
-revoke all on function public.usage_summary()            from public, anon;
+revoke all on function public.is_paid()                    from public, anon;
+revoke all on function public.usage_limit(text, boolean)   from public, anon;
+revoke all on function public.claim_usage(text)            from public, anon;
+revoke all on function public.usage_summary()              from public, anon;
+grant execute on function public.is_paid()                  to authenticated;
 grant execute on function public.usage_limit(text, boolean) to authenticated;
 grant execute on function public.claim_usage(text)          to authenticated;
 grant execute on function public.usage_summary()            to authenticated;

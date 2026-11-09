@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { describeSubscription, type SubInfo } from "@/lib/subscription";
 
 export type UsageKind = "magic" | "image" | "tool";
 
@@ -114,5 +115,36 @@ export async function getUsageSummary(): Promise<UsageSummary> {
   } catch (e: any) {
     console.error("[usage] summary crashed:", e?.message || e);
     return { ok: false, status: 503, error: "Could not load your usage. Please try again." };
+  }
+}
+
+/** The logged-in user's own plan (read through row-level security: only their own row is visible). */
+export async function getMySubscription(): Promise<
+  { ok: true; info: SubInfo & { memberSince: string | null } } | { ok: false; status: 401 | 503; error: string }
+> {
+  try {
+    const supabase = await createClient();
+    const res = await withTimeout(supabase.auth.getUser(), 6000);
+    if (!res) return { ok: false, status: 503, error: "Login service is not responding. Please try again." };
+    const user = res.data.user;
+    if (!user) {
+      if (res.error && (res.error.status === 0 || /fetch/i.test(res.error.message))) {
+        return { ok: false, status: 503, error: "Login service is not reachable right now." };
+      }
+      return { ok: false, status: 401, error: "Please log in." };
+    }
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .select("plan, status, started_at, current_period_end, billing_period")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) {
+      // Table or columns missing: behave as "free" instead of breaking every page that shows a banner.
+      console.error("[usage] subscription read failed:", error.code, error.message);
+    }
+    return { ok: true, info: { ...describeSubscription(error ? null : data), memberSince: user.created_at ?? null } };
+  } catch (e: any) {
+    console.error("[usage] subscription crashed:", e?.message || e);
+    return { ok: false, status: 503, error: "Could not load your plan." };
   }
 }

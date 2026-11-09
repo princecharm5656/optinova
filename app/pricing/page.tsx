@@ -8,6 +8,7 @@ import { Check, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+// Only list what exists today. Teams is not built yet, so it is "coming soon" and cannot be bought.
 const tiers = [
   {
     name: "Free",
@@ -15,14 +16,16 @@ const tiers = [
     description: "Perfect for getting started",
     features: [
       "40 AI generations daily",
-      "Basic image tools",
-      "Basic PDF tools",
-      "Standard SEO tools",
-      "Community support",
+      "60 image generations daily",
+      "10 business blueprints daily",
+      "All tools included",
+      "Your history saved in your account",
+      "Support via the contact form",
     ],
     cta: "Get Started",
     href: "/signup",
     highlighted: false,
+    comingSoon: false,
   },
   {
     name: "Pro",
@@ -31,34 +34,32 @@ const tiers = [
     description: "For serious creators",
     features: [
       "400 AI generations daily",
-      "Advanced image tools",
-      "Advanced PDF tools",
-      "Priority AI processing",
-      "Save unlimited outputs",
-      "Priority support",
-      "API access (100 calls/day)",
+      "600 image generations daily",
+      "100 business blueprints daily",
+      "All tools included",
+      "Your history saved in your account",
+      "Priority email support",
     ],
-    cta: "Start Pro Trial",
-    href: "/signup?plan=pro",
+    cta: "Get Pro",
+    href: "/upgrade",
     highlighted: true,
+    comingSoon: false,
   },
   {
     name: "Teams",
-    price: "$29",
-    period: "/month",
-    description: "For growing teams",
+    price: "Soon",
+    description: "Planned for a future release. Not available yet.",
     features: [
       "Everything in Pro",
-      "5 team seats",
+      "Multiple team seats",
       "Shared workspace",
       "Brand voice settings",
       "Team analytics",
-      "Admin dashboard",
-      "Dedicated support",
     ],
-    cta: "Contact Sales",
-    href: "/signup?plan=teams",
+    cta: "Tell us you are interested",
+    href: "/contact",
     highlighted: false,
+    comingSoon: true,
   },
 ];
 
@@ -134,9 +135,13 @@ export default function PricingPage() {
                 <Link href="/signup">
                   <Button size="lg" className="w-full">{tier.cta}</Button>
                 </Link>
+              ) : tier.comingSoon ? (
+                <Link href="/contact">
+                  <Button size="lg" variant="outline" className="w-full">{tier.cta}</Button>
+                </Link>
               ) : (
                 <Link href="/upgrade">
-                  <Button size="lg" className="w-full bg-cyan-accent text-black hover:bg-cyan-accent/90">
+                  <Button size="lg" className="w-full bg-cyan-400 text-black font-semibold hover:bg-cyan-300">
                     {tier.cta}
                   </Button>
                 </Link>
@@ -172,18 +177,16 @@ export default function PricingPage() {
                 <th className="text-left p-4 text-text-muted">Feature</th>
                 <th className="text-center p-4 text-cyan-accent">Free</th>
                 <th className="text-center p-4 text-cyan-accent">Pro</th>
-                <th className="text-center p-4 text-purple-400">Teams</th>
+                <th className="text-center p-4 text-purple-400">Teams (soon)</th>
               </tr>
             </thead>
             <tbody className="text-text-base">
-              <FeatureRow feature="AI Tools Access" free="40/day" pro="400/day" teams="400/day" />
-              <FeatureRow feature="AI Generations" free="40/day" pro="400/day" teams="400/day" />
-              <FeatureRow feature="Save History" free="20 items" pro="Unlimited" teams="Unlimited" />
-              <FeatureRow feature="Image Generation" free="60/day" pro="600/day" teams="600/day" />
-              <FeatureRow feature="Priority Support" free="❌" pro="✅" teams="✅ Priority" />
-              <FeatureRow feature="Team Members" free="1" pro="1" teams="5 seats" />
-              <FeatureRow feature="API Access" free="❌" pro="❌" teams="✅" />
-              <FeatureRow feature="Custom Branding" free="❌" pro="❌" teams="✅" />
+              <FeatureRow feature="AI generations per day" free="40/day" pro="400/day" teams="Soon" />
+              <FeatureRow feature="Image generations per day" free="60/day" pro="600/day" teams="Soon" />
+              <FeatureRow feature="Business blueprints per day" free="10/day" pro="100/day" teams="Soon" />
+              <FeatureRow feature="Blueprint PDF export" free="✅" pro="✅" teams="Soon" />
+              <FeatureRow feature="History saved in your account" free="✅" pro="✅" teams="Soon" />
+              <FeatureRow feature="Priority support" free="❌" pro="✅" teams="Soon" />
             </tbody>
           </table>
         </div>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, ShieldCheck, ChevronDown, UserCog, History as HistoryIcon, LayoutDashboard, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useSubscription } from "@/lib/use-subscription";
+import { formatDate } from "@/lib/subscription";
 
 type Me = { loggedIn: false } | { loggedIn: true; email: string; name?: string | null; isAdmin: boolean };
 type UsageItem = { kind: "tool" | "image" | "magic"; used: number; max: number; remaining: number };
@@ -30,6 +32,7 @@ export default function AccountChip({ global = false }: { global?: boolean }) {
   const [usage, setUsage] = useState<Usage>(null);
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const sub = useSubscription(open);
 
   const loadMe = useCallback(async () => {
     try {
@@ -130,6 +133,12 @@ export default function AccountChip({ global = false }: { global?: boolean }) {
               <span className="rounded-full bg-white/5 px-2 py-0.5 text-gray-300">
                 {planBadge === "Admin" ? "Admin account" : planBadge === "Pro" ? "Pro plan" : "Free plan"}
               </span>
+              {sub && (sub.state === "active" || sub.state === "expiring") && (
+                <span className={`ml-2 ${sub.state === "expiring" ? "text-amber-300" : "text-gray-400"}`}>
+                  {sub.state === "expiring" ? `${sub.daysLeft} day${sub.daysLeft === 1 ? "" : "s"} left` : `until ${formatDate(sub.endsAt)}`}
+                </span>
+              )}
+              {sub?.state === "expired" && <span className="ml-2 text-red-300">expired {formatDate(sub.endsAt)}</span>}
             </p>
           </div>
 
