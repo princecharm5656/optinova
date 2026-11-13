@@ -7,8 +7,7 @@ import { Loader2, UserRound, BarChart3, History as HistoryIcon, ShieldCheck, Cop
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/lib/toast";
 import PlanBanner from "@/components/magic/plan-banner";
-import { useSubscription } from "@/lib/use-subscription";
-import { formatDate, timeLeftText } from "@/lib/subscription";
+import PlanCard from "@/components/magic/plan-card";
 import {
   EMPTY_PROFILE, PROFILE_MAX, fetchHistory, toDbProfile, validateProfile,
   type HistoryEntry, type HistoryType, type ProfileFields,
@@ -229,65 +228,6 @@ const USAGE_LABEL: Record<UsageItem["kind"], string> = {
   image: "Image generation",
   magic: "Business blueprints (Magic)",
 };
-
-function PlanCard({ paid }: { paid: boolean }) {
-  const sub = useSubscription();
-  const running = sub?.state === "active" || sub?.state === "expiring";
-  const planName = sub?.plan === "teams" ? "Teams" : "Pro";
-  const rows: [string, string][] = sub
-    ? [
-        ["Member since", formatDate(sub.memberSince)],
-        ...(sub.state !== "free"
-          ? ([
-              ["Plan started", formatDate(sub.startedAt)],
-              [running ? "Ends on" : "Ended on", formatDate(sub.endsAt)],
-              ...(running ? ([["Days left", String(sub.daysLeft)]] as [string, string][]) : []),
-              ["Billing", sub.billingPeriod === "yearly" ? "Yearly" : "Monthly"],
-            ] as [string, string][])
-          : []),
-      ]
-    : [];
-  const tone =
-    sub?.state === "expiring" ? "bg-amber-500/15 text-amber-200"
-    : sub?.state === "expired" ? "bg-red-500/15 text-red-200"
-    : running || paid ? "bg-emerald-500/15 text-emerald-200"
-    : "bg-white/5 text-text-muted";
-  const status =
-    sub?.state === "expiring" ? `Ends soon (${timeLeftText(sub).replace("ends ", "")})`
-    : sub?.state === "expired" ? "Expired"
-    : running ? "Active"
-    : "Free plan";
-
-  return (
-    <div className={`${card} space-y-5`}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-text-muted">Your plan</p>
-          <p className="text-2xl font-bold">
-            {running || sub?.state === "expired" ? planName : paid ? "Pro" : "Free"}
-            <span className={`ml-3 rounded-full px-3 py-1 align-middle text-xs font-semibold ${tone}`}>{status}</span>
-          </p>
-        </div>
-        <Link href="/upgrade" className={primaryBtn}>
-          <Sparkles className="h-4 w-4" /> {running ? "Renew / extend" : sub?.state === "expired" ? `Renew ${planName}` : "Upgrade to Pro"}
-        </Link>
-      </div>
-      {rows.length > 0 && (
-        <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-          {rows.map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-4 border-b border-base-color/60 pb-2 text-sm">
-              <dt className="text-text-muted">{k}</dt>
-              <dd className="font-medium">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {sub?.state === "free" && (
-        <p className="text-xs text-text-muted">Pro gives you 10x higher daily limits. Pay for one month at a time. Nothing renews automatically.</p>
-      )}
-    </div>
-  );
-}
 
 function UsageTab() {
   const [data, setData] = useState<{ paid: boolean; items: UsageItem[] } | null>(null);

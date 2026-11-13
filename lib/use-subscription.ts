@@ -4,20 +4,29 @@ import { useEffect, useState } from "react";
 import type { SubInfo } from "@/lib/subscription";
 
 export type MySub = SubInfo & { memberSince: string | null };
+export type SubStatus = "loading" | "ready" | "error";
 
-/** The logged-in user's own plan (state, dates, days left). null while loading or when logged out. */
-export function useSubscription(enabled = true): MySub | null {
-  const [info, setInfo] = useState<MySub | null>(null);
+/** Your plan, plus whether loading worked. Lets the UI say "could not load" instead of guessing. */
+export function useSubscriptionState(enabled = true): { info: MySub | null; status: SubStatus } {
+  const [state, setState] = useState<{ info: MySub | null; status: SubStatus }>({ info: null, status: "loading" });
   useEffect(() => {
     if (!enabled) return;
     let off = false;
     fetch("/api/subscription", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => !off && j && setInfo(j as MySub))
-      .catch(() => {});
+      .then(async (r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return (await r.json()) as MySub;
+      })
+      .then((j) => !off && setState({ info: j, status: "ready" }))
+      .catch(() => !off && setState({ info: null, status: "error" }));
     return () => {
       off = true;
     };
   }, [enabled]);
-  return info;
+  return state;
+}
+
+/** The logged-in user's own plan (state, dates, days left). null while loading, on error, or when logged out. */
+export function useSubscription(enabled = true): MySub | null {
+  return useSubscriptionState(enabled).info;
 }

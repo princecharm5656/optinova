@@ -42,7 +42,7 @@ Do not include quotes around the JSON values.`;
     } catch {
       // Try to extract from text
       const subjectMatch = responseText.match(/subject["']?\s*:\s*["']?([^"'\n]+)/i);
-      const bodyMatch = responseText.match(/body["']?\s*:\s*["']?(.+)/is);
+      const bodyMatch = responseText.match(/body["']?\s*:\s*["']?([\s\S]+)/i);
       if (subjectMatch) result.subject = subjectMatch[1].trim();
       if (bodyMatch) result.body = bodyMatch[1].trim().replace(/["'}]/g, "");
     }

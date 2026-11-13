@@ -54,6 +54,8 @@ export default function AdminUpgradePage() {
       toast.error(
         res.status === 403
           ? "The account you are logged in with right now is not the admin. Check the account shown at the top right."
+          : res.status === 404 || res.status === 405
+          ? "The server file for this action is missing or in the wrong folder (app/api/admin/subscription/route.ts must export POST). Run: node scripts/check-routes.mjs"
           : json.error || `Failed (${res.status})`
       );
       return false;

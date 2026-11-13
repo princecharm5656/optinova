@@ -48,7 +48,7 @@ Return ONLY as JSON:
       result = JSON.parse(cleaned);
     } catch {
       const titleMatch = responseText.match(/title["']?\s*:\s*["']?([^"'\n]+)/i);
-      const contentMatch = responseText.match(/content["']?\s*:\s*["']?(.+)/is);
+      const contentMatch = responseText.match(/content["']?\s*:\s*["']?([\s\S]+)/i);
       if (titleMatch) result.title = titleMatch[1].trim();
       if (contentMatch) result.content = contentMatch[1].trim().replace(/["'}]/g, "");
     }
